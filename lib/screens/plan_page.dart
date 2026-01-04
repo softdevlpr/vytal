@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'diet_plan_page.dart';
+import 'lifestyle_plan_page.dart';
+import 'exercise_plan_page.dart';
 
 class PlanPage extends StatelessWidget {
   const PlanPage({super.key});
@@ -16,22 +19,57 @@ class PlanPage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _planCard(
-              title: "Diet Plan",
-              subtitle: "Personalized meals for your body",
-              icon: Icons.restaurant,
+
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DietPlanPage(),
+                  ),
+                );
+              },
+              child: _planCard(
+                title: "Diet Plan",
+                subtitle: "Personalized meals for your body",
+                icon: Icons.restaurant,
+              ),
             ),
+
             const SizedBox(height: 16),
-            _planCard(
-              title: "Lifestyle",
-              subtitle: "Sleep, hydration & habits",
-              icon: Icons.self_improvement,
+
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const LifestylePlanPage(),
+                  ),
+                );
+              },
+              child: _planCard(
+                title: "Lifestyle",
+                subtitle: "Sleep, hydration & habits",
+                icon: Icons.self_improvement,
+              ),
             ),
+
             const SizedBox(height: 16),
-            _planCard(
-              title: "Exercise",
-              subtitle: "Gentle workouts & activity",
-              icon: Icons.fitness_center,
+
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ExercisePlanPage(),
+                  ),
+                );
+              },
+              child: _planCard(
+                title: "Exercise",
+                subtitle: "Gentle workouts & activity",
+                icon: Icons.fitness_center,
+              ),
             ),
           ],
         ),
@@ -59,14 +97,19 @@ class PlanPage extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(subtitle,
-                  style: const TextStyle(color: Colors.white70)),
+              Text(
+                subtitle,
+                style: const TextStyle(color: Colors.white70),
+              ),
             ],
           ),
         ],

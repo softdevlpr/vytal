@@ -6,9 +6,6 @@ import 'screens/home_page.dart';
 import 'screens/plan_page.dart';
 import 'screens/insights_page.dart';
 import 'screens/add_symptoms_page.dart';
-import 'screens/TimelinePage.dart';
-
-
 
 void main() {
   runApp(const MyApp());
@@ -26,6 +23,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 /// -------------------------------
 /// BOTTOM NAV CONTROLLER
 
@@ -40,12 +38,7 @@ class _BottomNavControllerState extends State<BottomNavController> {
   int _currentIndex = 0;
 
   // Pages for tabs (do NOT include the + button here)
-  final List<Widget> _pages = [
-    HomePage(),
-    PlanPage(),
-    TimelinePage(),
-    InsightsPage(),
-  ];
+  final List<Widget> _pages = [HomePage(), PlanPage(), InsightsPage()];
 
   @override
   Widget build(BuildContext context) {
@@ -74,10 +67,22 @@ class _BottomNavControllerState extends State<BottomNavController> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.check_circle_outline), label: "Plan"),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle, size: 36), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.timeline), label: "Timeline"),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Insights"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.check_circle_outline),
+            label: "Plan",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle, size: 36),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.timeline),
+            label: "Timeline",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: "Insights",
+          ),
         ],
       ),
     );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'add_treatment_page.dart';
+import 'completed_items_page.dart';
 
 class InsightsPage extends StatelessWidget {
   const InsightsPage({super.key});
@@ -17,14 +19,37 @@ class InsightsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _insightCard(
-              title: "Add your treatments",
-              icon: Icons.add_circle_outline,
+
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AddTreatmentPage(),
+                  ),
+                );
+              },
+              child: _insightCard(
+                title: "Add your treatments",
+                icon: Icons.add_circle_outline,
+              ),
             ),
+
             const SizedBox(height: 14),
-            _insightCard(
-              title: "View done items",
-              icon: Icons.check_circle_outline,
+
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CompletedItemsPage(),
+                  ),
+                );
+              },
+              child: _insightCard(
+                title: "View done items",
+                icon: Icons.check_circle_outline,
+              ),
             ),
           ],
         ),

@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+
+// Pages
 import 'add_symptoms_page.dart';
+import 'insights_page.dart';
+import 'plan_page.dart';
+import 'profile_settings_page.dart';
+import 'reminder_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -8,52 +14,115 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F011E),
-      bottomNavigationBar: _bottomNavBar(),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
+              /// PROFILE HEADER
+              _profileHeader(context),
+
+              const SizedBox(height: 20),
 
               /// DAILY AFFIRMATION
               _dailyAffirmation(),
 
               const SizedBox(height: 24),
 
-              /// ACTIVE CARD (CLICKABLE)
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AddSymptomsPage(),
-                    ),
-                  );
-                },
-                child: _taskCard(
-                  title: "Start tracking symptoms",
-                  isActive: true,
-                ),
+              /// START TRACKING
+              _navigationCard(
+                context,
+                title: "Start tracking symptoms",
+                isActive: true,
+                page: const AddSymptomsPage(),
               ),
 
               const SizedBox(height: 12),
 
-              _taskCard(
+              /// INSIGHTS
+              _navigationCard(
+                context,
                 title: "Check out your insights",
                 isActive: false,
+                page: const InsightsPage(),
               ),
 
               const SizedBox(height: 12),
 
-              _taskCard(
-                title: "Unlock homepage",
+              /// PLAN
+              _navigationCard(
+                context,
+                title: "View your plan",
                 isActive: false,
+                page: const PlanPage(),
+              ),
+
+              const SizedBox(height: 12),
+
+              /// REMINDER
+              _navigationCard(
+                context,
+                title: "Set a reminder",
+                isActive: false,
+                page: const ReminderPage(),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  /// PROFILE HEADER
+  Widget _profileHeader(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            const CircleAvatar(
+              radius: 26,
+              backgroundColor: Color(0xFF9D4EDD),
+              child: Icon(Icons.person, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  "Hello 👋",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  "How are you feeling today?",
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        IconButton(
+          icon: const Icon(Icons.settings, color: Colors.white70),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ProfileSettingsPage(),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -78,10 +147,7 @@ class HomePage extends StatelessWidget {
         children: const [
           Text(
             "Daily Affirmation 🌱",
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
           SizedBox(height: 8),
           Text(
@@ -97,61 +163,46 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// TASK CARD
-  Widget _taskCard({required String title, required bool isActive}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF6A00F4) : const Color(0xFF1E1E2C),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: isActive ? Colors.white : Colors.white54,
-              fontSize: 16,
+  /// NAVIGATION CARD (Reusable)
+  Widget _navigationCard(
+    BuildContext context, {
+    required String title,
+    required bool isActive,
+    required Widget page,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => page),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        decoration: BoxDecoration(
+          color: isActive
+              ? const Color(0xFF6A00F4)
+              : const Color(0xFF1E1E2C),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: isActive ? Colors.white : Colors.white70,
+                fontSize: 16,
+              ),
             ),
-          ),
-          if (isActive)
-            const Icon(Icons.arrow_forward_ios,
-                size: 16, color: Colors.white),
-        ],
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.white54,
+            ),
+          ],
+        ),
       ),
-    );
-  }
-
-  /// BOTTOM NAV BAR
-  Widget _bottomNavBar() {
-    return BottomNavigationBar(
-      backgroundColor: const Color(0xFF0F011E),
-      selectedItemColor: const Color(0xFF9D4EDD),
-      unselectedItemColor: Colors.white54,
-      type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: "Home",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.check_circle_outline),
-          label: "Plan",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.add_circle, size: 36),
-          label: "",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.timeline),
-          label: "Timeline",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.bar_chart),
-          label: "Insights",
-        ),
-      ],
     );
   }
 }
