@@ -1,2 +1,14 @@
+# Node
 node_modules/
 .env
+
+# Flutter
+.dart_tool/
+.build/
+android/.gradle/
+ios/Flutter/
+macos/Flutter/
+
+# IDE
+.idea/
+.vscode/
