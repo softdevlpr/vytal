@@ -82,13 +82,13 @@ router.post("/recommend", async (req, res) => {
 
     // 6️⃣ Format response for frontend
     const formattedTests = tests.map((t) => ({
-      test_id: t.test_id,
-      test_name: t.test_name?.trim(),
+      name: t.test_name?.trim(),
+      purpose: t.test_purpose || "",
     }));
 
     const formattedCauses = causes.map((c) => ({
-      cause_id: c.cause_id,
-      cause_name: c.cause_name?.trim(),
+      name: c.cause_name?.trim(),
+      description: c.description || "",
     }));
 
     return res.json({
