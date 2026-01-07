@@ -2,9 +2,9 @@
   "name": "vytal",
   "version": "1.0.0",
   "description": "Backend API for Vytal health app",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node/src/server.js",
+    "start": "node src/server.js",
     "dev": "nodemon src/server.js"
   },
   "repository": {
