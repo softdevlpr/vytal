@@ -6,6 +6,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const recommendRoute = require("./routes/recommend");
+const affirmationRoutes = require("./routes/affirmationRoutes");
 
 connectDB();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", profileRoutes);
 app.use("/api", recommendRoute);
+app.use("/api", affirmationRoutes);
 
 app.get("/", (req, res) => {
   res.send("Vytal backend is running");
