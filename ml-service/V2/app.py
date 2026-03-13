@@ -4,7 +4,7 @@ import joblib
 import numpy as np
 
 # load multilabel model
-model = joblib.load("V2/vytal_multilabel_model.pkl")
+model = joblib.load("vytal_multilabel_model.pkl")
 
 app = Flask(__name__)
 CORS(app)
