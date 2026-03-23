@@ -1,5 +1,13 @@
 import random
 
+categories = [
+    "healthy lifestyle",
+    "weight management",
+    "fitness and strength",
+    "condition support",
+    "energy and productivity"
+]
+
 for category in categories:
     found = False
 
