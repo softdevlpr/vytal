@@ -14,14 +14,17 @@ model.fit(X, y)
 
 # Prediction function
 def predict_test(user_input):
-    input_df = pd.DataFrame([user_input])
 
-    # Fill missing columns with 0
+    # Fill missing first
     for col in X.columns:
-        if col not in input_df:
-            input_df[col] = 0
+        if col not in user_input:
+            user_input[col] = 0
 
-    # Ensure same column order
+    #  Check after full input
+    if all(value == 0 for value in user_input.values()):
+        return "No Test Required (Healthy)"
+
+    input_df = pd.DataFrame([user_input])
     input_df = input_df[X.columns]
 
     prediction = model.predict(input_df)
