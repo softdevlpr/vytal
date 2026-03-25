@@ -29,11 +29,9 @@ def predict():
     if not answers:
         return jsonify({"error": "No answers provided"}), 400
 
-    result = predict_test(answers)
+   result = predict_test(answers)
 
-    return jsonify({
-        "recommended_test": result
-    })
+return jsonify(result)
 
 
 if __name__ == "__main__":
