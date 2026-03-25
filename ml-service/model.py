@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
+from collections import OrderedDict
 
 test_descriptions = {
     "No Test Required": "You do not appear to have any concerning symptoms. No medical test is needed at this time.",
@@ -48,7 +49,8 @@ def predict_test(user_input):
     prediction = model.predict(input_df)
     predicted_test = prediction[0]
 
-    return {
-        "test": predicted_test,
-        "description": test_descriptions.get(predicted_test, "No description available")
-    }
+    
+    return OrderedDict([
+    ("test", predicted_test),
+    ("description", test_descriptions.get(predicted_test, "No description available"))
+    ])
