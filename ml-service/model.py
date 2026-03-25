@@ -30,26 +30,25 @@ model.fit(X, y)
 # Prediction function
 def predict_test(user_input):
 
-    # Fill missing first
+    # Fill missing columns
     for col in X.columns:
         if col not in user_input:
             user_input[col] = 0
 
-    #  Check after full input
+    # Healthy case
     if all(value == 0 for value in user_input.values()):
         return {
-            "test": "No Test Required (Healthy)",
-            "description": "You seem healthy. No immediate test is required."
+            "test": "No Test Required",
+            "description": "You do not appear to have any concerning symptoms."
         }
 
     input_df = pd.DataFrame([user_input])
     input_df = input_df[X.columns]
 
     prediction = model.predict(input_df)
-
     predicted_test = prediction[0]
 
-return {
-    "test": predicted_test,
-    "description": test_descriptions.get(predicted_test, "No description available")
-}
+    return {
+        "test": predicted_test,
+        "description": test_descriptions.get(predicted_test, "No description available")
+    }
