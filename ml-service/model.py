@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 
 # Load dataset
-df = pd.read_csv("vytal_final_dataset_v2.csv.xls")
+df = pd.read_csv("vytal_screening_dataset.csv")
 
 # Split input/output
 X = df.drop("recommended_test", axis=1)
