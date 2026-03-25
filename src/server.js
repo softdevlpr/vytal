@@ -1,4 +1,4 @@
-require("dotenv").config({ path: "D:/vytal/.env" });
+require("dotenv").config();
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -7,6 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const recommendRoute = require("./routes/recommend");
 const affirmationRoutes = require("./routes/affirmationRoutes");
+const reminderRoutes = require("./routes/reminderRoutes");
 
 connectDB();
 
@@ -17,10 +18,15 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", profileRoutes);
 app.use("/api", recommendRoute);
 app.use("/api", affirmationRoutes);
+console.log("🔥 ReminderRoutes Loaded");
+app.use("/api/reminder", require("./routes/reminderRoutes"));
 
 app.get("/", (req, res) => {
   res.send("Vytal backend is running");
 });
+
+
+
 
 const PORT = process.env.PORT || 5000;
 
