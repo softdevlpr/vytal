@@ -9,7 +9,6 @@ def recommend_tips(user_symptoms):
 
     # Step 1: Score tips based on matching symptoms
     for tip in tips:
-
         matches = set(user_symptoms) & set(tip["symptoms"])
 
         if matches:
@@ -39,7 +38,6 @@ def recommend_tips(user_symptoms):
     for category in categories:
         found = False
 
-        # Try to find a matching tip
         for item in recommendations:
             tip = item["tip"]
 
@@ -49,14 +47,12 @@ def recommend_tips(user_symptoms):
                 found = True
                 break
 
-        # If no matching tip → pick random tip from that category
         if not found:
             category_tips = [t for t in tips if t["category"] == category]
 
             if category_tips:
                 random_tip = random.choice(category_tips)
 
-                # Avoid duplicates
                 if random_tip["tip_id"] not in used_tip_ids:
                     selected_tips.append(random_tip)
                     used_tip_ids.add(random_tip["tip_id"])
@@ -72,4 +68,23 @@ def recommend_tips(user_symptoms):
             selected_tips.append(tip)
             used_tip_ids.add(tip["tip_id"])
 
-    return selected_tips
+    
+    grouped = {}
+
+    for tip in selected_tips:
+        category = tip["category"]
+
+        if category not in grouped:
+            grouped[category] = []
+
+        grouped[category].append(tip)
+
+    # Convert dict → list format
+    result = []
+    for category, tips_list in grouped.items():
+        result.append({
+            "category": category,
+            "tips": tips_list
+        })
+
+    return result
