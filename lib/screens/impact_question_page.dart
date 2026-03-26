@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:google_fonts/google_fonts.dart';
 
 class ImpactQuestionPage extends StatefulWidget {
   final String symptom;
@@ -64,10 +65,10 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
     if (currentIndex < questions.length - 1) {
       setState(() {
         currentIndex++;
-        selectedValue = null; // reset selection
+        selectedValue = null;
       });
     } else {
-      predict(); // last → submit
+      predict();
     }
   }
 
@@ -134,12 +135,12 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
             /// QUESTION
             Text(
               question,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
               textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 26, // 🔥 increased
+                fontWeight: FontWeight.w600,
+              ),
             ),
 
             const SizedBox(height: 40),
@@ -153,7 +154,13 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
                   selectedValue = value;
                 });
               },
-              title: const Text("Yes", style: TextStyle(color: Colors.white)),
+              title: Text(
+                "Yes",
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
               activeColor: Colors.green,
             ),
 
@@ -166,7 +173,13 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
                   selectedValue = value;
                 });
               },
-              title: const Text("No", style: TextStyle(color: Colors.white)),
+              title: Text(
+                "No",
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
               activeColor: Colors.red,
             ),
 
@@ -186,14 +199,14 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
                 ),
                 child: Text(
                   isLast ? "Submit" : "Next",
-                  style: const TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 18), // ❌ unchanged
                 ),
               ),
             ),
 
             const SizedBox(height: 15),
 
-            /// DISCLAIMER
+            /// DISCLAIMER (unchanged)
             const Text(
               "Vytal does not provide a medical diagnosis and should not replace the judgement of a licensed healthcare practitioner.",
               textAlign: TextAlign.center,
