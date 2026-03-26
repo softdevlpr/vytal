@@ -35,4 +35,3 @@ def random_tips():
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True)
 
-app.run(debug=True, port=5001)
