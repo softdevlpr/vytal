@@ -26,6 +26,8 @@ def predict():
     data = request.json
     answers = data.get("answers")
 
+    print("ML RECEIVED DATA :", answers)
+
     if not answers:
         return jsonify({"error": "No answers provided"}), 400
 
@@ -34,4 +36,4 @@ def predict():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(port=5000, debug=True)
