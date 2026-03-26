@@ -58,7 +58,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                 children: [
 
                   Text(
-                    "Get symptom recommendations",
+                    "Get test recommendations",
                     style: GoogleFonts.poppins(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
