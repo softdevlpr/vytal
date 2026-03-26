@@ -1,6 +1,6 @@
-import axios from "axios";
+const axios = require("axios");
 
-export const predictTests = async (req, res) => {
+exports.predictTests = async (req, res) => {
   try {
     const response = await axios.post(
       "http://127.0.0.1:5000/predict",

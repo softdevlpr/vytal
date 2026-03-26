@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 // Screens
 import 'screens/login_page.dart';
@@ -7,7 +10,30 @@ import 'screens/plan_page.dart';
 import 'screens/insights_page.dart';
 import 'screens/add_symptoms_page.dart';
 
-void main() {
+// 🔥 GLOBAL NOTIFICATION INSTANCE
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔥 ANDROID SETTINGS
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+
+  // 🔥 INITIALIZE
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.requestNotificationsPermission();
+
+  tz.initializeTimeZones();
   runApp(const MyApp());
 }
 
@@ -19,13 +45,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
-      home: const LoginPage(), // Start with LoginPage
+      home: const LoginPage(),
     );
   }
 }
-
-/// -------------------------------
-/// BOTTOM NAV CONTROLLER
 
 class BottomNavController extends StatefulWidget {
   const BottomNavController({super.key});
@@ -37,7 +60,6 @@ class BottomNavController extends StatefulWidget {
 class _BottomNavControllerState extends State<BottomNavController> {
   int _currentIndex = 0;
 
-  // Pages for tabs (do NOT include the + button here)
   final List<Widget> _pages = [HomePage(), PlanPage(), InsightsPage()];
 
   @override
@@ -49,17 +71,14 @@ class _BottomNavControllerState extends State<BottomNavController> {
         selectedItemColor: const Color(0xFF9D4EDD),
         unselectedItemColor: Colors.white54,
         type: BottomNavigationBarType.fixed,
-        // Map _currentIndex to BottomNavigationBar index
         currentIndex: _currentIndex < 2 ? _currentIndex : _currentIndex + 1,
         onTap: (index) {
           if (index == 2) {
-            // Middle + button tapped
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => AddSymptomsPage()),
             );
           } else {
-            // Map BottomNav index to _pages index
             setState(() {
               _currentIndex = index > 2 ? index - 1 : index;
             });
