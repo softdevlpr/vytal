@@ -122,7 +122,7 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
                 "Yes",
                 style: GoogleFonts.poppins(
                   color: Colors.white,
-                  fontSize: 18, 
+                  fontSize: 18,
                 ),
               ),
               activeColor: Colors.green,
@@ -137,7 +137,7 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
                 "No",
                 style: GoogleFonts.poppins(
                   color: Colors.white,
-                  fontSize: 18, 
+                  fontSize: 18,
                 ),
               ),
               activeColor: Colors.red,
@@ -145,30 +145,40 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
 
             const Spacer(),
 
-            /// BUTTON
+            /// ✅ BUTTON (FIXED COLOR 💜)
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
                 onPressed: selectedValue == null ? null : nextQuestion,
-                child: Text(isLast ? "Submit" : "Next"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF9D4EDD), // 💜 restored
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  isLast ? "Submit" : "Next",
+                  style: const TextStyle(fontSize: 18),
+                ),
               ),
             ),
 
             const SizedBox(height: 15),
 
-          
+            /// DISCLAIMER
             Text(
               "Vytal does not provide a medical diagnosis and should not replace the judgement of a licensed healthcare practitioner.",
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 color: Colors.white54,
-                fontSize: 14, 
+                fontSize: 14,
               ),
             ),
 
             const SizedBox(height: 10),
 
+            /// PROGRESS
             Text(
               "${currentIndex + 1} / ${questions.length}",
               style: const TextStyle(color: Colors.white38),
