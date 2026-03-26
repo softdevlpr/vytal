@@ -56,4 +56,4 @@ def predict_test(user_input):
     ("description", test_descriptions.get(predicted_test, "No description available"))
     ])
 
-pickle.dump(model, open("model.pkl", "wb"))
+
