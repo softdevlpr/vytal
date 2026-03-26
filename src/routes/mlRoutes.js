@@ -1,7 +1,9 @@
-import express from "express";
-import { predictTests } from "../controllers/mlController.js";
-
+const express = require("express");
 const router = express.Router();
 
-router.post("/predict-tests", predictTests);
-export default router;
+router.post("/predict-tests", (req, res) => {
+  console.log("ML ROUTE HIT 🔥");
+  res.json({ message: "ML working" });
+});
+
+module.exports = router;
