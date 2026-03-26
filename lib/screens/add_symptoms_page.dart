@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'impact_question_page.dart';
 
 class AddSymptomsPage extends StatefulWidget {
   const AddSymptomsPage({super.key});
@@ -11,68 +10,24 @@ class AddSymptomsPage extends StatefulWidget {
 
 class _AddSymptomsPageState extends State<AddSymptomsPage> {
 
-  /// ⚠️ MUST MATCH BACKEND CSV COLUMNS
+  /// ✅ MUST MATCH flow.json keys
   final List<String> symptoms = [
-    "sneezing",
-    "anxiety",
-    "headache",
+    "chest_pain",
+    "short_breath",
+    "dizziness",
+    "high_bp",
+    "sweating",
+    "nausea",
     "fatigue",
-    "sore_throat",
+    "arm_pain",
+    "jaw_pain",
+    "irregular_heartbeat",
+    "swelling_legs",
+    "fainting"
   ];
 
-  final Set<String> selectedSymptoms = {};
-
-  /// 🔥 Convert to backend format
-  Map<String, int> buildAnswers() {
-    Map<String, int> answers = {};
-
-    for (var symptom in symptoms) {
-      answers[symptom] = selectedSymptoms.contains(symptom) ? 1 : 0;
-    }
-
-    return answers;
-  }
-
-  /// 🔥 API CALL
-  Future<void> predict() async {
-    final answers = buildAnswers();
-
-    try {
-      final response = await http.post(
-        Uri.parse("http://10.0.2.2:5000/predict"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "answers": answers,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        final test = data["test"];
-        final description = data["description"];
-
-        /// 👉 Show result
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: Text(test),
-            content: Text(description),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("OK"),
-              ),
-            ],
-          ),
-        );
-      } else {
-        print("Error: ${response.body}");
-      }
-    } catch (e) {
-      print("API Error: $e");
-    }
-  }
+  /// ✅ ONLY ONE selection
+  String? selectedSymptom;
 
   @override
   Widget build(BuildContext context) {
@@ -84,18 +39,19 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
         leading: const BackButton(color: Colors.white),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
             child: const Text("Skip", style: TextStyle(color: Colors.white70)),
           ),
         ],
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
+            /// TITLE
             const Text(
               "Get symptom recommendations",
               style: TextStyle(
@@ -104,6 +60,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                 color: Colors.white,
               ),
             ),
+
             const SizedBox(height: 20),
 
             /// CARD
@@ -115,13 +72,14 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
               ),
               child: Column(
                 children: symptoms.map((symptom) {
-                  final isSelected = selectedSymptoms.contains(symptom);
+                  final isSelected = selectedSymptom == symptom;
 
                   return ListTile(
                     title: Text(
                       symptom.replaceAll("_", " ").toUpperCase(),
                       style: const TextStyle(color: Colors.white),
                     ),
+
                     trailing: Icon(
                       isSelected
                           ? Icons.check_circle
@@ -130,11 +88,10 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                           ? const Color(0xFF9D4EDD)
                           : Colors.white38,
                     ),
+
                     onTap: () {
                       setState(() {
-                        isSelected
-                            ? selectedSymptoms.remove(symptom)
-                            : selectedSymptoms.add(symptom);
+                        selectedSymptom = symptom; // ✅ FIXED
                       });
                     },
                   );
@@ -149,13 +106,26 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: selectedSymptoms.isEmpty ? null : predict,
+                onPressed: selectedSymptom == null
+                    ? null
+                    : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ImpactQuestionPage(
+                              symptom: selectedSymptom!, // ✅ PASS CORRECTLY
+                            ),
+                          ),
+                        );
+                      },
+
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9D4EDD),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
+
                 child: const Text("Next", style: TextStyle(fontSize: 18)),
               ),
             ),
