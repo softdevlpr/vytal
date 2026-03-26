@@ -118,7 +118,6 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      /// 🔥 CUSTOM BOTTOM NAV (MATCH DESIGN)
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         color: const Color(0xFF1E1E2C),
@@ -152,7 +151,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// 🔥 NAV ITEM (MATCH STYLE)
   Widget navItem(IconData icon, String label, int index) {
     final isSelected = currentIndex == index;
 
@@ -182,7 +180,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// PROFILE HEADER
   Widget _profileHeader(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
