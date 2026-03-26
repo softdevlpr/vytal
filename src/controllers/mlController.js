@@ -4,18 +4,15 @@ exports.predictTests = async (req, res) => {
   try {
     const response = await axios.post(
       "http://127.0.0.1:5000/predict",
-      req.body,
       {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
+        answers: req.body   // fix
+      }
     );
 
     res.json(response.data);
+
   } catch (error) {
-    console.error("ML ERROR:", error.message);
-    console.error("ML RESPONSE:", error.response?.data);
+    console.error("ML ERROR:", error.response?.data || error.message);
 
     res.status(500).json({
       message: "ML prediction failed",

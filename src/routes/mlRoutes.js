@@ -1,8 +1,8 @@
 const express = require("express");
-const { predictTests } = require("../controllers/mlController");
-
 const router = express.Router();
+
+const { predictTests } = require("../controllers/mlController");
 
 router.post("/predict-tests", predictTests);
 
-module.exports = router; // ✅ IMPORTANT
+module.exports = router;
