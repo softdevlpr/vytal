@@ -12,14 +12,16 @@ class ImpactQuestionPage extends StatefulWidget {
 }
 
 class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
-
   List questions = [];
   int currentIndex = 0;
 
-  /// Store answers like { "fatigue": 1 }
+  /// store answers
   Map<String, int> answers = {};
 
   bool isLoading = true;
+
+  /// current selected value (radio)
+  int? selectedValue;
 
   @override
   void initState() {
@@ -27,7 +29,7 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
     fetchQuestions();
   }
 
-  /// 🔥 STEP 1: Fetch questions
+  /// FETCH QUESTIONS
   Future<void> fetchQuestions() async {
     try {
       final response = await http.post(
@@ -45,29 +47,31 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
         });
       }
     } catch (e) {
-      print("Error fetching questions: $e");
+      print("Error: $e");
     }
   }
 
-  /// 🔥 Save answer (Yes=1, No=0)
-  void saveAnswer(int value) {
+  /// SAVE ANSWER
+  void saveAnswer() {
     final questionId = questions[currentIndex]["id"];
-    answers[questionId] = value;
+    answers[questionId] = selectedValue ?? 0;
   }
 
-  /// 🔥 Next button logic
+  /// NEXT / SUBMIT
   void nextQuestion() {
+    saveAnswer();
+
     if (currentIndex < questions.length - 1) {
       setState(() {
         currentIndex++;
+        selectedValue = null; // reset selection
       });
     } else {
-      /// LAST QUESTION → CALL PREDICT
-      predict();
+      predict(); // last → submit
     }
   }
 
-  /// 🔥 CALL ML MODEL
+  /// CALL ML
   Future<void> predict() async {
     try {
       final response = await http.post(
@@ -90,10 +94,10 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.pop(context); // back to home
+                  Navigator.pop(context);
                 },
                 child: const Text("OK"),
-              ),
+              )
             ],
           ),
         );
@@ -105,7 +109,6 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
 
   @override
   Widget build(BuildContext context) {
-
     if (isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -113,6 +116,7 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
     }
 
     final question = questions[currentIndex]["text"];
+    final isLast = currentIndex == questions.length - 1;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F011E),
@@ -127,7 +131,7 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
         child: Column(
           children: [
 
-            /// QUESTION TEXT
+            /// QUESTION
             Text(
               question,
               style: const TextStyle(
@@ -135,45 +139,77 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
+              textAlign: TextAlign.center,
             ),
 
             const SizedBox(height: 40),
 
-            /// YES BUTTON
-            ElevatedButton(
-              onPressed: () {
-                saveAnswer(1);
-                nextQuestion();
+            /// YES RADIO
+            RadioListTile<int>(
+              value: 1,
+              groupValue: selectedValue,
+              onChanged: (value) {
+                setState(() {
+                  selectedValue = value;
+                });
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: const Text("Yes"),
+              title: const Text("Yes", style: TextStyle(color: Colors.white)),
+              activeColor: Colors.green,
             ),
 
-            const SizedBox(height: 20),
-
-            /// NO BUTTON
-            ElevatedButton(
-              onPressed: () {
-                saveAnswer(0);
-                nextQuestion();
+            /// NO RADIO
+            RadioListTile<int>(
+              value: 0,
+              groupValue: selectedValue,
+              onChanged: (value) {
+                setState(() {
+                  selectedValue = value;
+                });
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: const Text("No"),
+              title: const Text("No", style: TextStyle(color: Colors.white)),
+              activeColor: Colors.red,
             ),
 
             const Spacer(),
 
-            /// Progress indicator
+            /// NEXT / SUBMIT BUTTON
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: selectedValue == null ? null : nextQuestion,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF9D4EDD),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  isLast ? "Submit" : "Next",
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            /// DISCLAIMER
+            const Text(
+              "Vytal does not provide a medical diagnosis and should not replace the judgement of a licensed healthcare practitioner.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            /// PROGRESS
             Text(
               "${currentIndex + 1} / ${questions.length}",
-              style: const TextStyle(color: Colors.white54),
-            )
+              style: const TextStyle(color: Colors.white38),
+            ),
           ],
         ),
       ),
