@@ -5,4 +5,4 @@ const router = express.Router();
 
 router.post("/predict-tests", predictTests);
 
-export default router;
+module.exports = router;
