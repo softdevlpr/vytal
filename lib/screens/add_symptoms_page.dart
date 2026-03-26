@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'impact_question_page.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AddSymptomsPage extends StatefulWidget {
   const AddSymptomsPage({super.key});
@@ -9,15 +10,69 @@ class AddSymptomsPage extends StatefulWidget {
 }
 
 class _AddSymptomsPageState extends State<AddSymptomsPage> {
+
+  /// ⚠️ MUST MATCH BACKEND CSV COLUMNS
   final List<String> symptoms = [
-    "Sneezing",
-    "Anxiety",
-    "Headache",
-    "Fatigue",
-    "Sore throat",
+    "sneezing",
+    "anxiety",
+    "headache",
+    "fatigue",
+    "sore_throat",
   ];
 
   final Set<String> selectedSymptoms = {};
+
+  /// 🔥 Convert to backend format
+  Map<String, int> buildAnswers() {
+    Map<String, int> answers = {};
+
+    for (var symptom in symptoms) {
+      answers[symptom] = selectedSymptoms.contains(symptom) ? 1 : 0;
+    }
+
+    return answers;
+  }
+
+  /// 🔥 API CALL
+  Future<void> predict() async {
+    final answers = buildAnswers();
+
+    try {
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:5000/predict"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "answers": answers,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        final test = data["test"];
+        final description = data["description"];
+
+        /// 👉 Show result
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text(test),
+            content: Text(description),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+      } else {
+        print("Error: ${response.body}");
+      }
+    } catch (e) {
+      print("API Error: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,9 +116,10 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
               child: Column(
                 children: symptoms.map((symptom) {
                   final isSelected = selectedSymptoms.contains(symptom);
+
                   return ListTile(
                     title: Text(
-                      symptom,
+                      symptom.replaceAll("_", " ").toUpperCase(),
                       style: const TextStyle(color: Colors.white),
                     ),
                     trailing: Icon(
@@ -88,25 +144,12 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
 
             const Spacer(),
 
-            /// NEXT BUTTON (UPDATED)
+            /// NEXT BUTTON
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: selectedSymptoms.isEmpty
-                    ? null
-                    : () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ImpactQuestionPage(
-                              symptom: selectedSymptoms.first,
-                              selectedSymptoms: selectedSymptoms
-                                  .toList(), // ✅ added
-                            ),
-                          ),
-                        );
-                      },
+                onPressed: selectedSymptoms.isEmpty ? null : predict,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9D4EDD),
                   shape: RoundedRectangleBorder(
