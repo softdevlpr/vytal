@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // Pages
 import 'add_symptoms_page.dart';
@@ -29,13 +30,27 @@ class HomePage extends StatelessWidget {
               /// DAILY AFFIRMATION
               _dailyAffirmation(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 25),
 
-              /// START TRACKING
+              /// 🔥 SECTION TITLE
+              Text(
+                "Your Actions",
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
+              /// TRACK SYMPTOMS
               _navigationCard(
                 context,
-                title: "Start tracking symptoms",
-                isActive: true,
+                title: "Track Symptoms",
+                subtitle: "Log how you feel today",
+                icon: Icons.favorite_border,
+                isPrimary: true,
                 page: const AddSymptomsPage(),
               ),
 
@@ -44,8 +59,9 @@ class HomePage extends StatelessWidget {
               /// INSIGHTS
               _navigationCard(
                 context,
-                title: "Check out your insights",
-                isActive: false,
+                title: "Insights",
+                subtitle: "Understand your patterns",
+                icon: Icons.bar_chart,
                 page: const InsightsPage(),
               ),
 
@@ -54,8 +70,9 @@ class HomePage extends StatelessWidget {
               /// PLAN
               _navigationCard(
                 context,
-                title: "View your plan",
-                isActive: false,
+                title: "Daily Plan",
+                subtitle: "Stay on track",
+                icon: Icons.calendar_today,
                 page: const PlanPage(),
               ),
 
@@ -64,8 +81,9 @@ class HomePage extends StatelessWidget {
               /// REMINDER
               _navigationCard(
                 context,
-                title: "Set a reminder",
-                isActive: false,
+                title: "Reminders",
+                subtitle: "Never miss anything",
+                icon: Icons.notifications_none,
                 page: const ReminderPage(),
               ),
             ],
@@ -90,19 +108,19 @@ class HomePage extends StatelessWidget {
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   "Hello 👋",
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   "How are you feeling today?",
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     color: Colors.white54,
                     fontSize: 13,
                   ),
@@ -134,25 +152,26 @@ class HomePage extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
-            Color(0xFF7F00FF),
-            Color(0xFFE100FF),
+            Color(0xFF9D4EDD),
+            Color(0xFF5A0EFF),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           Text(
-            "Daily Affirmation 🌱",
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+            "Today's Affirmation 🌱",
+            style: GoogleFonts.poppins(
+              color: Colors.white70,
+              fontSize: 13,
+            ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
-            "I am taking care of my body and mind today.",
-            style: TextStyle(
+            "I choose to listen to my body and care for it with kindness today.",
+            style: GoogleFonts.poppins(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -163,12 +182,14 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// NAVIGATION CARD (Reusable)
+  /// 🔥 UPDATED NAVIGATION CARD
   Widget _navigationCard(
     BuildContext context, {
     required String title,
-    required bool isActive,
+    required String subtitle,
+    required IconData icon,
     required Widget page,
+    bool isPrimary = false,
   }) {
     return GestureDetector(
       onTap: () {
@@ -178,28 +199,52 @@ class HomePage extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isActive
-              ? const Color(0xFF6A00F4)
-              : const Color(0xFF1E1E2C),
-          borderRadius: BorderRadius.circular(14),
+          gradient: isPrimary
+              ? const LinearGradient(
+                  colors: [
+                    Color(0xFF9D4EDD),
+                    Color(0xFF5A0EFF),
+                  ],
+                )
+              : null,
+          color: isPrimary ? null : const Color(0xFF1E1E2C),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: TextStyle(
-                color: isActive ? Colors.white : Colors.white70,
-                fontSize: 16,
+
+            Icon(icon, color: Colors.white),
+
+            const SizedBox(width: 12),
+
+            /// TEXT
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white54,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: Colors.white54,
-            ),
+
+            const Icon(Icons.arrow_forward_ios,
+                size: 16, color: Colors.white54),
           ],
         ),
       ),
