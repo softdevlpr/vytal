@@ -3,7 +3,7 @@ import axios from "axios";
 export const predictTests = async (req, res) => {
   try {
     const response = await axios.post(
-      "http://127.0.0.1:5000/predict",
+      "http://127.0.0.1:3000/predict",
       {
         answers: req.body   // fix
       }
