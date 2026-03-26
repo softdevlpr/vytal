@@ -1,9 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
-router.post("/predict-tests", (req, res) => {
-  console.log("ML ROUTE HIT 🔥");
-  res.json({ message: "ML working" });
-});
+const { predictTests } = require("../controllers/mlController");
+
+router.post("/predict-tests", predictTests);
 
 module.exports = router;
