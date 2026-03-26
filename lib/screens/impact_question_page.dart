@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+import 'result_page.dart';
 
 class ImpactQuestionPage extends StatefulWidget {
   final String symptom;
+  final List<String> selectedSymptoms;
 
-  const ImpactQuestionPage({super.key, required this.symptom});
+  const ImpactQuestionPage({
+    super.key,
+    required this.symptom,
+    required this.selectedSymptoms,
+  });
 
   @override
   State<ImpactQuestionPage> createState() => _ImpactQuestionPageState();
@@ -11,6 +18,42 @@ class ImpactQuestionPage extends StatefulWidget {
 
 class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
   double impact = 0;
+
+  /// ✅ Mapping UI → ML features
+  final Map<String, String> symptomMapping = {
+    "Headache": "dizziness",
+    "Fatigue": "fatigue",
+    "Anxiety": "irregular_heartbeat",
+    "Sore throat": "nausea",
+    "Sneezing": "short_breath",
+  };
+
+  /// ✅ Build payload
+  Map<String, int> buildPayload() {
+    Map<String, int> payload = {
+      "chest_pain": 0,
+      "short_breath": 0,
+      "dizziness": 0,
+      "high_bp": 0,
+      "sweating": 0,
+      "nausea": 0,
+      "fatigue": 0,
+      "arm_pain": 0,
+      "jaw_pain": 0,
+      "irregular_heartbeat": 0,
+      "swelling_legs": 0,
+      "fainting": 0,
+    };
+
+    for (var symptom in widget.selectedSymptoms) {
+      final mapped = symptomMapping[symptom];
+      if (mapped != null) {
+        payload[mapped] = 1;
+      }
+    }
+
+    return payload;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +67,7 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
           TextButton(
             onPressed: () {},
             child: const Text("Skip", style: TextStyle(color: Colors.white70)),
-          )
+          ),
         ],
       ),
       body: Padding(
@@ -67,10 +110,7 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
                 children: [
                   Text(
                     widget.symptom,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
                   ),
                   const SizedBox(height: 20),
 
@@ -100,13 +140,29 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
 
             const Spacer(),
 
-            /// NEXT
+            /// NEXT BUTTON (FINAL FIX)
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: () {
-                  // Next question (2/4)
+                onPressed: () async {
+                  final payload = buildPayload();
+
+                  try {
+                    final result = await ApiService.predictTests(payload);
+
+                    /// ✅ Navigate to Result Page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ResultPage(result: result),
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Prediction failed")),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9D4EDD),
@@ -114,10 +170,7 @@ class _ImpactQuestionPageState extends State<ImpactQuestionPage> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text(
-                  "Next",
-                  style: TextStyle(fontSize: 18),
-                ),
+                child: const Text("Next", style: TextStyle(fontSize: 18)),
               ),
             ),
           ],

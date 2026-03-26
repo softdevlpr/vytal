@@ -33,7 +33,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
               Navigator.pop(context);
             },
             child: const Text("Skip", style: TextStyle(color: Colors.white70)),
-          )
+          ),
         ],
       ),
       body: Padding(
@@ -88,7 +88,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
 
             const Spacer(),
 
-            /// NEXT BUTTON
+            /// NEXT BUTTON (UPDATED)
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -101,6 +101,8 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                           MaterialPageRoute(
                             builder: (_) => ImpactQuestionPage(
                               symptom: selectedSymptoms.first,
+                              selectedSymptoms: selectedSymptoms
+                                  .toList(), // ✅ added
                             ),
                           ),
                         );
@@ -111,10 +113,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text(
-                  "Next",
-                  style: TextStyle(fontSize: 18),
-                ),
+                child: const Text("Next", style: TextStyle(fontSize: 18)),
               ),
             ),
           ],

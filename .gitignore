@@ -1,3 +1,15 @@
 node_modules/
 .env
 .idea/
+
+# Flutter
+build/
+.dart_tool/
+.packages
+
+# Android
+android/.gradle/
+android/app/build/
+
+# iOS
+ios/Pods/

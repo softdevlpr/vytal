@@ -1,17 +1,21 @@
-import axios from "axios";
+const axios = require("axios");
 
-export const predictTests = async (req, res) => {
+exports.predictTests = async (req, res) => {
   try {
-    const symptoms = req.body;
-
     const response = await axios.post(
       "http://127.0.0.1:5000/predict",
-      symptoms,
+      req.body,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
     );
 
     res.json(response.data);
   } catch (error) {
-    console.error(error);
+    console.error("ML ERROR:", error.message);
+    console.error("ML RESPONSE:", error.response?.data);
 
     res.status(500).json({
       message: "ML prediction failed",
