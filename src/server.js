@@ -7,7 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const recommendRoute = require("./routes/recommend");
 const affirmationRoutes = require("./routes/affirmationRoutes");
-import mlRoutes from "./routes/mlRoutes.js";
+const mlRoutes = require("./routes/mlRoutes");
 
 connectDB();
 
