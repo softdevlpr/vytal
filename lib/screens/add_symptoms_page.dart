@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'impact_question_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AddSymptomsPage extends StatefulWidget {
   const AddSymptomsPage({super.key});
@@ -10,7 +11,6 @@ class AddSymptomsPage extends StatefulWidget {
 
 class _AddSymptomsPageState extends State<AddSymptomsPage> {
 
-  /// ✅ MUST MATCH flow.json keys
   final List<String> symptoms = [
     "chest_pain",
     "short_breath",
@@ -26,10 +26,8 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
     "fainting"
   ];
 
-  /// ✅ ONLY ONE selection
   String? selectedSymptom;
 
-  /// ✅ FIX: Proper text formatting (Chest Pain instead of CHEST PAIN)
   String formatText(String text) {
     return text
         .split("_")
@@ -46,112 +44,100 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: Colors.white),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Skip", style: TextStyle(color: Colors.white70)),
-          ),
-        ],
       ),
 
-      /// ✅ FIX: Scroll + full height handling
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      body: Column(
+        children: [
 
-              /// TITLE
-              const Text(
-                "Get symptom recommendations",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+          /// 🔥 SCROLLABLE PART
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
-              const SizedBox(height: 20),
-
-              /// CARD
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E2C),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: symptoms.map((symptom) {
-                    final isSelected = selectedSymptom == symptom;
-
-                    return ListTile(
-                      title: Text(
-                        formatText(symptom), // ✅ FIXED
-                        style: const TextStyle(color: Colors.white),
-                      ),
-
-                      trailing: Icon(
-                        isSelected
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                        color: isSelected
-                            ? const Color(0xFF9D4EDD)
-                            : Colors.white38,
-                      ),
-
-                      onTap: () {
-                        setState(() {
-                          selectedSymptom = symptom;
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-
-              const SizedBox(height: 30), // ✅ FIX: Spacer removed
-
-              /// NEXT BUTTON
-              SizedBox(
-                width: double.infinity,
-                height: 60, // ✅ Bigger button
-                child: ElevatedButton(
-                  onPressed: selectedSymptom == null
-                      ? null
-                      : () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ImpactQuestionPage(
-                                symptom: selectedSymptom!,
-                              ),
-                            ),
-                          );
-                        },
-
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9D4EDD),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18), // smoother
-                    ),
-                    elevation: 5,
-                  ),
-
-                  child: const Text(
-                    "Next",
-                    style: TextStyle(
-                      fontSize: 18,
+                  Text(
+                    "Get symptom recommendations",
+                    style: GoogleFonts.poppins(
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
+
+                  const SizedBox(height: 20),
+
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1E2C),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: symptoms.map((symptom) {
+                        final isSelected = selectedSymptom == symptom;
+
+                        return ListTile(
+                          title: Text(
+                            formatText(symptom),
+                            style: GoogleFonts.poppins(color: Colors.white),
+                          ),
+                          trailing: Icon(
+                            isSelected
+                                ? Icons.check_circle
+                                : Icons.radio_button_unchecked,
+                            color: isSelected
+                                ? const Color(0xFF9D4EDD)
+                                : Colors.white38,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              selectedSymptom = symptom;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          /// 🔥 FIXED BUTTON (IMPORTANT)
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: SizedBox(
+              width: double.infinity,
+              height: 60,
+              child: ElevatedButton(
+                onPressed: selectedSymptom == null
+                    ? null
+                    : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ImpactQuestionPage(
+                              symptom: selectedSymptom!,
+                            ),
+                          ),
+                        );
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF9D4EDD),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                child: const Text(
+                  "Next",
+                  style: TextStyle(fontSize: 18),
                 ),
               ),
-
-              const SizedBox(height: 20), // extra bottom space
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
