@@ -98,8 +98,8 @@ class _HomePageState extends State<HomePage> {
 
               _navigationCard(
                 context,
-                title: "Daily Plan",
-                subtitle: "Stay on track",
+                title: "Daily Tips",
+                subtitle: "Get relevant health tips",
                 icon: Icons.calendar_today,
                 page: const PlanPage(),
               ),
@@ -128,7 +128,7 @@ class _HomePageState extends State<HomePage> {
 
             navItem(Icons.home, "Home", 0),
 
-            navItem(Icons.check_circle, "Plan", 1),
+            navItem(Icons.check_circle, "Tips", 1),
 
             /// CENTER +
             GestureDetector(
