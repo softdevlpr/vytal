@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from recommendation_engine import recommend_tips
 import random
 from database import load_tips
+import uvicorn
 
 app = FastAPI()
 
@@ -29,3 +30,7 @@ def get_recommendations(data: dict):
 def random_tips():
 
     return {"tips": random.sample(tips, 10)}
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", reload=True)
