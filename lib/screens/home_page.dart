@@ -8,13 +8,22 @@ import 'plan_page.dart';
 import 'profile_settings_page.dart';
 import 'reminder_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+
+  int currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F011E),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -22,17 +31,15 @@ class HomePage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              /// PROFILE HEADER
               _profileHeader(context),
 
               const SizedBox(height: 20),
 
-              /// DAILY AFFIRMATION
+              /// 🔥 BIGGER AFFIRMATION
               _dailyAffirmation(),
 
               const SizedBox(height: 25),
 
-              /// 🔥 SECTION TITLE
               Text(
                 "Your Actions",
                 style: GoogleFonts.poppins(
@@ -44,7 +51,6 @@ class HomePage extends StatelessWidget {
 
               const SizedBox(height: 15),
 
-              /// TRACK SYMPTOMS
               _navigationCard(
                 context,
                 title: "Track Symptoms",
@@ -56,7 +62,6 @@ class HomePage extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              /// INSIGHTS
               _navigationCard(
                 context,
                 title: "Insights",
@@ -67,7 +72,6 @@ class HomePage extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              /// PLAN
               _navigationCard(
                 context,
                 title: "Daily Plan",
@@ -78,7 +82,6 @@ class HomePage extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              /// REMINDER
               _navigationCard(
                 context,
                 title: "Reminders",
@@ -89,6 +92,52 @@ class HomePage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+
+      /// 🔥 BOTTOM NAV (MATCH IMAGE)
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color(0xFF1E1E2C),
+        selectedItemColor: const Color(0xFF9D4EDD),
+        unselectedItemColor: Colors.white54,
+        currentIndex: currentIndex,
+        onTap: (index) {
+          setState(() {
+            currentIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "Home",
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.check_circle),
+            label: "Plan",
+          ),
+
+          /// 🔥 CENTER BIG +
+          BottomNavigationBarItem(
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              child: const Icon(Icons.add, color: Colors.black),
+            ),
+            label: "",
+          ),
+
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: "Insights",
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "Profile",
+          ),
+        ],
       ),
     );
   }
@@ -103,7 +152,7 @@ class HomePage extends StatelessWidget {
             const CircleAvatar(
               radius: 26,
               backgroundColor: Color(0xFF9D4EDD),
-              child: Icon(Icons.person, color: Colors.white, size: 28),
+              child: Icon(Icons.person, color: Colors.white),
             ),
             const SizedBox(width: 12),
             Column(
@@ -117,7 +166,6 @@ class HomePage extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
                   "How are you feeling today?",
                   style: GoogleFonts.poppins(
@@ -129,26 +177,16 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
-        IconButton(
-          icon: const Icon(Icons.settings, color: Colors.white70),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ProfileSettingsPage(),
-              ),
-            );
-          },
-        ),
+        const Icon(Icons.settings, color: Colors.white70),
       ],
     );
   }
 
-  /// DAILY AFFIRMATION
+  /// 🔥 BIGGER AFFIRMATION CARD
   Widget _dailyAffirmation() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(26), // 🔥 bigger padding
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
@@ -156,7 +194,7 @@ class HomePage extends StatelessWidget {
             Color(0xFF5A0EFF),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,15 +203,15 @@ class HomePage extends StatelessWidget {
             "Today's Affirmation 🌱",
             style: GoogleFonts.poppins(
               color: Colors.white70,
-              fontSize: 13,
+              fontSize: 14,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             "I choose to listen to my body and care for it with kindness today.",
             style: GoogleFonts.poppins(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: 20, // 🔥 increased
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -182,7 +220,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// 🔥 UPDATED NAVIGATION CARD
+  /// NAV CARD
   Widget _navigationCard(
     BuildContext context, {
     required String title,
@@ -214,12 +252,9 @@ class HomePage extends StatelessWidget {
         ),
         child: Row(
           children: [
-
             Icon(icon, color: Colors.white),
-
             const SizedBox(width: 12),
 
-            /// TEXT
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
