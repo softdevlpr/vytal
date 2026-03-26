@@ -19,6 +19,31 @@ class _HomePageState extends State<HomePage> {
 
   int currentIndex = 0;
 
+  void handleNavigation(int index) {
+    setState(() {
+      currentIndex = index;
+    });
+
+    switch (index) {
+      case 1:
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const PlanPage()));
+        break;
+      case 2:
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AddSymptomsPage()));
+        break;
+      case 3:
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const InsightsPage()));
+        break;
+      case 4:
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ProfileSettingsPage()));
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,7 +60,6 @@ class _HomePageState extends State<HomePage> {
 
               const SizedBox(height: 20),
 
-              /// 🔥 BIGGER AFFIRMATION
               _dailyAffirmation(),
 
               const SizedBox(height: 25),
@@ -94,48 +118,64 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      /// 🔥 BOTTOM NAV (MATCH IMAGE)
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color(0xFF1E1E2C),
-        selectedItemColor: const Color(0xFF9D4EDD),
-        unselectedItemColor: Colors.white54,
-        currentIndex: currentIndex,
-        onTap: (index) {
-          setState(() {
-            currentIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home",
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle),
-            label: "Plan",
-          ),
+      /// 🔥 CUSTOM BOTTOM NAV (MATCH DESIGN)
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        color: const Color(0xFF1E1E2C),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
 
-          /// 🔥 CENTER BIG +
-          BottomNavigationBarItem(
-            icon: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
+            navItem(Icons.home, "Home", 0),
+
+            navItem(Icons.check_circle, "Plan", 1),
+
+            /// CENTER +
+            GestureDetector(
+              onTap: () => handleNavigation(2),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                ),
+                child: const Icon(Icons.add, color: Colors.black),
               ),
-              child: const Icon(Icons.add, color: Colors.black),
             ),
-            label: "",
-          ),
 
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: "Insights",
+            navItem(Icons.bar_chart, "Insights", 3),
+
+            navItem(Icons.person, "Profile", 4),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 🔥 NAV ITEM (MATCH STYLE)
+  Widget navItem(IconData icon, String label, int index) {
+    final isSelected = currentIndex == index;
+
+    return GestureDetector(
+      onTap: () => handleNavigation(index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected
+                ? const Color(0xFF9D4EDD)
+                : Colors.white54,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Profile",
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: isSelected
+                  ? const Color(0xFF9D4EDD)
+                  : Colors.white54,
+            ),
           ),
         ],
       ),
@@ -182,11 +222,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// 🔥 BIGGER AFFIRMATION CARD
+  /// AFFIRMATION
   Widget _dailyAffirmation() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(26), // 🔥 bigger padding
+      padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
@@ -211,7 +251,7 @@ class _HomePageState extends State<HomePage> {
             "I choose to listen to my body and care for it with kindness today.",
             style: GoogleFonts.poppins(
               color: Colors.white,
-              fontSize: 20, // 🔥 increased
+              fontSize: 20,
               fontWeight: FontWeight.w600,
             ),
           ),
