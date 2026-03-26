@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from collections import OrderedDict
 import pickle
+import os
 
 test_descriptions = {
     "No Test Required": "You do not appear to have any concerning symptoms. No medical test is needed at this time.",
@@ -27,8 +28,15 @@ y = df["recommended_test"]
 
 
 
-# Load pre-trained model
-model = pickle.load(open("model.pkl", "rb"))
+
+if os.path.exists("model.pkl"):
+    model = pickle.load(open("model.pkl", "rb"))
+else:
+    model = DecisionTreeClassifier()
+    model.fit(X, y)
+    pickle.dump(model, open("model.pkl", "wb"))
+
+
 # Prediction function
 def predict_test(user_input):
 
@@ -56,4 +64,4 @@ def predict_test(user_input):
     ("description", test_descriptions.get(predicted_test, "No description available"))
     ])
 
-pickle.dump(model, open("model.pkl", "wb"))
+
