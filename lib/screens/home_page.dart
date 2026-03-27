@@ -16,6 +16,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
   int currentIndex = 0;
 
   void handleNavigation(int index) {
@@ -26,7 +27,7 @@ class _HomePageState extends State<HomePage> {
     switch (index) {
       case 1:
         Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const LifestylePage()));
+            MaterialPageRoute(builder: (_) => const LifeestylePage()));
         break;
       case 2:
         Navigator.push(context,
@@ -54,9 +55,13 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
               _profileHeader(context),
+
               const SizedBox(height: 20),
+
               _dailyAffirmation(),
+
               const SizedBox(height: 25),
 
               Text(
@@ -93,10 +98,10 @@ class _HomePageState extends State<HomePage> {
 
               _navigationCard(
                 context,
-                title: "Tips",
-                subtitle: "Your personalized plan",
-                icon: Icons.check_circle,
-                page: const LifestylePage(),
+                title: "Daily Tips",
+                subtitle: "Get relevant health tips",
+                icon: Icons.calendar_today,
+                page: LifestylePage(),
               ),
 
               const SizedBox(height: 12),
@@ -113,16 +118,16 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      /// ✅ FIXED BOTTOM NAV BAR
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         color: const Color(0xFF1E1E2C),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
+
             navItem(Icons.home, "Home", 0),
 
-            navItem(Icons.check_circle, "Plan", 1),
+            navItem(Icons.check_circle, "Tips", 1),
 
             /// CENTER +
             GestureDetector(
@@ -214,6 +219,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  /// AFFIRMATION
   Widget _dailyAffirmation() {
     return Container(
       width: double.infinity,
@@ -251,6 +257,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  /// NAV CARD
   Widget _navigationCard(
     BuildContext context, {
     required String title,
@@ -284,6 +291,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             Icon(icon, color: Colors.white),
             const SizedBox(width: 12),
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,6 +314,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+
             const Icon(Icons.arrow_forward_ios,
                 size: 16, color: Colors.white54),
           ],
