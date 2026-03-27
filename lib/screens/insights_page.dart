@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'add_treatment_page.dart';
-import 'completed_items_page.dart';
 
 class InsightsPage extends StatelessWidget {
   const InsightsPage({super.key});
@@ -25,7 +23,7 @@ class InsightsPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const AddTreatmentPage(),
+                    builder: (_) => const LifestylePage(),
                   ),
                 );
               },
@@ -42,7 +40,7 @@ class InsightsPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const CompletedItemsPage(),
+                    builder: (_) => const LifestylePage(),
                   ),
                 );
               },
