@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'impact_question_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddSymptomsPage extends StatefulWidget {
   const AddSymptomsPage({super.key});
@@ -10,7 +11,6 @@ class AddSymptomsPage extends StatefulWidget {
 }
 
 class _AddSymptomsPageState extends State<AddSymptomsPage> {
-
   final List<String> symptoms = [
     "chest_pain",
     "short_breath",
@@ -45,10 +45,8 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
         elevation: 0,
         leading: const BackButton(color: Colors.white),
       ),
-
       body: Column(
         children: [
-
           /// 🔥 SCROLLABLE PART
           Expanded(
             child: SingleChildScrollView(
@@ -56,7 +54,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Text(
                     "Get test recommendations",
                     style: GoogleFonts.poppins(
@@ -65,7 +62,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                       color: Colors.white,
                     ),
                   ),
-
                   const SizedBox(height: 20),
 
                   Container(
@@ -105,7 +101,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
             ),
           ),
 
-          /// 🔥 FIXED BUTTON (IMPORTANT)
+          /// 🔥 FIXED BUTTON
           Padding(
             padding: const EdgeInsets.all(20),
             child: SizedBox(
@@ -114,7 +110,19 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
               child: ElevatedButton(
                 onPressed: selectedSymptom == null
                     ? null
-                    : () {
+                    : () async {
+                        final prefs =
+                            await SharedPreferences.getInstance();
+
+                        List<String> storedSymptoms =
+                            prefs.getStringList("symptoms_history") ?? [];
+
+                        // 🔥 Add selected symptom
+                        storedSymptoms.add(selectedSymptom!);
+
+                        await prefs.setStringList(
+                            "symptoms_history", storedSymptoms);
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
