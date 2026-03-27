@@ -25,7 +25,7 @@ class _TipsPageState extends State<TipsPage> {
   Future<void> fetchTips() async {
     try {
       final response = await http.get(
-        Uri.parse("http://10.0.2.2:5000/tips?category=${widget.category}"),
+        Uri.parse("http://10.0.2.2:8000/tips?category=${widget.category}"),
       );
 
       if (response.statusCode == 200) {
