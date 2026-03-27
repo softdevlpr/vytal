@@ -37,17 +37,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF0F011E),
       ),
-
       home: OnboardingPage(),
     );
   }
 }
 
-///  MAIN NAV CONTROLLER (USED AFTER LOGIN)
+/// MAIN NAV CONTROLLER
 class BottomNavController extends StatefulWidget {
   const BottomNavController({super.key});
 
@@ -60,10 +58,10 @@ class _BottomNavControllerState extends State<BottomNavController> {
 
   final List<Widget> _pages = [
     HomePage(),
-    LifestylePage(), // ✅ renamed from Plan → Tips
-    AddSymptomsPage(),   // ➕ center
+    LifestylePage(),
+    AddSymptomsPage(),
     InsightsPage(),
-    ProfileSettingsPage(),       // (if you have)
+    ProfileSettingsPage(),
   ];
 
   @override
@@ -80,47 +78,21 @@ class _BottomNavControllerState extends State<BottomNavController> {
 
         onTap: (index) {
           setState(() {
-            _currentIndex = index; // ❌ NO Navigator.push
+            _currentIndex = index;
           });
         },
 
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.lightbulb), label: "Tips"),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle, size: 36), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Insights"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
-      ),
-    );
-  }
-}
-
-  /// 🔥 NAV ITEM
-  Widget navItem(IconData icon, String label, int index) {
-    final isSelected = currentIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          currentIndex = index;
-        });
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? const Color(0xFF9D4EDD) : Colors.white54,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: isSelected ? const Color(0xFF9D4EDD) : Colors.white54,
-            ),
-          ),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.lightbulb), label: "Tips"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle, size: 36), label: ""),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart), label: "Insights"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );
