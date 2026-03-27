@@ -9,7 +9,6 @@ import 'screens/plan_page.dart';
 import 'screens/insights_page.dart';
 import 'screens/add_symptoms_page.dart';
 import 'screens/profile_settings_page.dart';
-import 'screens/lifestyle_page.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
