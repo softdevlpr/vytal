@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
     switch (index) {
       case 1:
         Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const PlanPage()));
+            MaterialPageRoute(builder: (_) => const LifestylePage()));
         break;
       case 2:
         Navigator.push(context,
@@ -93,10 +93,10 @@ class _HomePageState extends State<HomePage> {
 
               _navigationCard(
                 context,
-                title: "Plan",
+                title: "Tips",
                 subtitle: "Your personalized plan",
                 icon: Icons.check_circle,
-                page: const PlanPage(),
+                page: const LifestylePage(),
               ),
 
               const SizedBox(height: 12),
