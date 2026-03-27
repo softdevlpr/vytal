@@ -44,7 +44,6 @@ Future<void> fetchTips() async {
       for (var cat in categories) cat: []
     };
 
-    /// 🔥 CALL RECOMMEND API
     final response = await http.post(
       Uri.parse("$baseUrl/recommend"),
       headers: {"Content-Type": "application/json"},
@@ -53,25 +52,32 @@ Future<void> fetchTips() async {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+
+      print("FULL RESPONSE: $data"); // 🔥 DEBUG
+
       List tips = data["recommended_tips"] ?? [];
 
-      /// ✅ FIX: ADD ALL TIPS (DON'T OVERWRITE)
       for (var categoryBlock in tips) {
         String category = categoryBlock["category"] ?? "";
         List tipsList = categoryBlock["tips"] ?? [];
 
+        print("CATEGORY: $category");
+        print("TIPS COUNT: ${tipsList.length}");
+
         if (grouped.containsKey(category)) {
           for (var tip in tipsList) {
-            if (tip["text"] != null &&
-                !grouped[category]!.contains(tip["text"])) {
-              grouped[category]!.add(tip["text"]);
+            String text = tip["text"] ?? "";
+
+            if (text.isNotEmpty) {
+              grouped[category]!.add(text);
             }
           }
         }
       }
     }
 
-    /// 🔥 RANDOM FILL
+    print("FINAL GROUPED: $grouped"); // 🔥 DEBUG
+
     final randomRes = await http.get(Uri.parse("$baseUrl/random_tips"));
 
     if (randomRes.statusCode == 200) {
@@ -87,9 +93,6 @@ Future<void> fetchTips() async {
         }
       }
     }
-
-    /// DEBUG (optional)
-    print("FINAL DATA: $grouped");
 
     setState(() {
       categorizedTips = grouped;
@@ -122,18 +125,20 @@ Future<void> fetchTips() async {
                 children: categories.map((category) {
                   return GestureDetector(
                     onTap: () {
-                      final tips = categorizedTips[category] ?? [];
+                    final tips = categorizedTips[category] ?? [];
 
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CategoryTipsPage(
-                            category: category,
-                            tips: tips,
-                          ),
+                    print("SENDING TIPS: $tips"); // 🔥 DEBUG
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CategoryTipsPage(
+                         category: category,
+                         tips: tips,
                         ),
-                      );
-                    },
+                      ),
+                    );
+                  }
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 15),
                       padding: const EdgeInsets.all(18),
