@@ -18,12 +18,12 @@ class _LifestylePlanPageState extends State<LifestylePlanPage> {
   String selectedCategory = "Healthy Lifestyle";
   bool isLoading = true;
 
-  /// ✅ CATEGORY NAMES MUST MATCH BACKEND EXACTLY
+  /// ✅ MATCH BACKEND EXACTLY
   final List<String> categories = [
     "Healthy Lifestyle",
     "Weight Management",
     "Fitness & Strength",
-    "Wellness Support",
+    "Condition Support",
     "Energy and Productivity"
   ];
 
@@ -36,57 +36,49 @@ class _LifestylePlanPageState extends State<LifestylePlanPage> {
   Future<void> fetchTips() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-
       List<String> storedSymptoms =
           prefs.getStringList("symptoms_history") ?? [];
 
-      /// ✅ If no symptoms → still load random tips instead of blank
-      if (storedSymptoms.isEmpty) {
-        await loadRandomForAllCategories();
-        return;
-      }
+      Map<String, List<String>> grouped = {
+        for (var cat in categories) cat: []
+      };
 
+      /// 🔥 CALL RECOMMEND API
       final response = await http.post(
         Uri.parse("$baseUrl/recommend"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"symptoms": storedSymptoms}),
       );
 
-      if (response.statusCode != 200) {
-        await loadRandomForAllCategories();
-        return;
-      }
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        List tips = data["recommended_tips"] ?? [];
 
-      final data = jsonDecode(response.body);
-      List tips = data["recommended_tips"] ?? [];
+        /// ✅ CORRECT PARSING
+        for (var categoryBlock in tips) {
+          String category = categoryBlock["category"] ?? "";
+          List tipsList = categoryBlock["tips"] ?? [];
 
-      Map<String, List<String>> grouped = {
-        for (var cat in categories) cat: []
-      };
-
-      /// ✅ SAFE PARSING
-      for (var tip in tips) {
-        String category = tip["category"] ?? "";
-        String text = tip["tip"] ?? "";
-
-        if (grouped.containsKey(category)) {
-          grouped[category]!.add(text);
+          if (grouped.containsKey(category)) {
+            grouped[category] = tipsList
+                .map<String>((t) => t["text"] ?? "")
+                .toList();
+          }
         }
       }
 
-      /// ✅ Fill empty categories with random tips
-      for (var cat in categories) {
-        if (grouped[cat]!.isEmpty) {
-          final randomRes =
-              await http.get(Uri.parse("$baseUrl/random_tips"));
+      /// 🔥 SINGLE RANDOM CALL (OPTIMIZED)
+      final randomRes = await http.get(Uri.parse("$baseUrl/random_tips"));
 
-          if (randomRes.statusCode == 200) {
-            final randomData = jsonDecode(randomRes.body);
-            List randomTips = randomData["tips"] ?? [];
+      if (randomRes.statusCode == 200) {
+        final randomData = jsonDecode(randomRes.body);
+        List randomTips = randomData["tips"] ?? [];
 
+        for (var cat in categories) {
+          if (grouped[cat]!.isEmpty) {
             grouped[cat] = randomTips
                 .take(3)
-                .map<String>((t) => t["tip"] ?? "")
+                .map<String>((t) => t["text"] ?? "")
                 .toList();
           }
         }
@@ -99,13 +91,11 @@ class _LifestylePlanPageState extends State<LifestylePlanPage> {
 
     } catch (e) {
       print("ERROR: $e");
-
-      /// fallback
       await loadRandomForAllCategories();
     }
   }
 
-  /// ✅ fallback loader (important)
+  /// 🔥 FALLBACK
   Future<void> loadRandomForAllCategories() async {
     Map<String, List<String>> grouped = {
       for (var cat in categories) cat: []
@@ -121,7 +111,7 @@ class _LifestylePlanPageState extends State<LifestylePlanPage> {
         for (var cat in categories) {
           grouped[cat] = tips
               .take(3)
-              .map<String>((t) => t["tip"] ?? "")
+              .map<String>((t) => t["text"] ?? "")
               .toList();
         }
       }
