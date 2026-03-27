@@ -117,8 +117,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-
-      
+    );
+  }
 
   Widget navItem(IconData icon, String label, int index) {
     final isSelected = currentIndex == index;
