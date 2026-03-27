@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'plan_page.dart';
 
 class InsightsPage extends StatelessWidget {
   const InsightsPage({super.key});
