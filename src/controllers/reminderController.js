@@ -8,7 +8,6 @@ exports.createReminder = async (req, res) => {
     const { userId, title, notes, timeOfDay, isRecurring, daysOfWeek } =
       req.body;
 
-    // 🔹 Basic validation (important)
     if (userId === undefined || !title || !timeOfDay) {
       return res.status(400).json({
         message: "userId, title and timeOfDay are required",

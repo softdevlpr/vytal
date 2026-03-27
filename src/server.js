@@ -11,7 +11,6 @@ const affirmationRoutes = require("./routes/affirmationRoutes");
 const mlRoutes = require("./routes/mlRoutes");
 const reminderRoutes = require("./routes/reminderRoutes");
 
-// Connect to DB (ONLY ONCE)
 connectDB();
 
 const app = express();
