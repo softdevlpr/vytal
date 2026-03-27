@@ -42,7 +42,7 @@ class _MainScreenState extends State<MainScreen> {
           children: [
 
             navItem(Icons.home, "Home", 0),
-            navItem(Icons.check_circle, "Plan", 1),
+            navItem(Icons.check_circle, "Tips", 1),
 
             /// ➕ CENTER BUTTON
             GestureDetector(
