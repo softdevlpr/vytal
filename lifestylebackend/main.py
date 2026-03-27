@@ -24,6 +24,10 @@ def get_recommendations(data: dict):
 
     return {"recommended_tips": results}
 
+@app.get("/tips")
+def get_tips_by_category(category: str):
+    filtered = [tip for tip in tips if tip["category"] == category]
+    return filtered
 
 @app.get("/random_tips")
 
