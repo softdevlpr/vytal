@@ -9,6 +9,7 @@ import 'screens/plan_page.dart';
 import 'screens/insights_page.dart';
 import 'screens/add_symptoms_page.dart';
 import 'screens/profile_settings_page.dart';
+import 'screens/lifestyle_page.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -58,14 +59,13 @@ class BottomNavController extends StatefulWidget {
 class _BottomNavControllerState extends State<BottomNavController> {
   int currentIndex = 0;
 
-  /// 🔥 ALL PAGES
   final List<Widget> pages = [
-    const HomePage(),
-    const PlanPage(),
-    const AddSymptomsPage(),
-    const InsightsPage(),
-    const ProfileSettingsPage(),
-  ];
+  HomePage(),
+  LifestylePage(), //  REPLACED
+  AddSymptomsPage(),
+  InsightsPage(),
+  ProfileSettingsPage(),
+];
 
   @override
   Widget build(BuildContext context) {
