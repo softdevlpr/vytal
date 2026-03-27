@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// 🔥 MAIN NAV CONTROLLER (USED AFTER LOGIN)
+///  MAIN NAV CONTROLLER (USED AFTER LOGIN)
 class BottomNavController extends StatefulWidget {
   const BottomNavController({super.key});
 
@@ -56,58 +56,45 @@ class BottomNavController extends StatefulWidget {
 }
 
 class _BottomNavControllerState extends State<BottomNavController> {
-  int currentIndex = 0;
+  int _currentIndex = 0;
 
-  final List<Widget> pages = [
-  HomePage(),
-  LifestylePage(), //  REPLACED
-  AddSymptomsPage(),
-  InsightsPage(),
-  ProfileSettingsPage(),
-];
+  final List<Widget> _pages = [
+    HomePage(),
+    LifestylePlanPage(), // ✅ renamed from Plan → Tips
+    AddSymptomsPage(),   // ➕ center
+    InsightsPage(),
+    ProfilePage(),       // (if you have)
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F011E),
+      body: _pages[_currentIndex],
 
-      /// 🔥 PAGE SWITCH
-      body: pages[currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color(0xFF0F011E),
+        selectedItemColor: const Color(0xFF9D4EDD),
+        unselectedItemColor: Colors.white54,
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _currentIndex,
 
-      /// 🔥 CUSTOM BOTTOM NAV
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        color: const Color(0xFF1E1E2C),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            navItem(Icons.home, "Home", 0),
-            navItem(Icons.check_circle, "Plan", 1),
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index; // ❌ NO Navigator.push
+          });
+        },
 
-            /// ➕ CENTER BUTTON
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  currentIndex = 2;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-                child: const Icon(Icons.add, color: Colors.black),
-              ),
-            ),
-
-            navItem(Icons.bar_chart, "Insights", 3),
-            navItem(Icons.person, "Profile", 4),
-          ],
-        ),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.lightbulb), label: "Tips"),
+          BottomNavigationBarItem(icon: Icon(Icons.add_circle, size: 36), label: ""),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Insights"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+        ],
       ),
     );
   }
+}
 
   /// 🔥 NAV ITEM
   Widget navItem(IconData icon, String label, int index) {
