@@ -27,7 +27,7 @@ class _HomePageState extends State<HomePage> {
     switch (index) {
       case 1:
         Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const PlanPage()));
+            MaterialPageRoute(builder: (_) => const LifestylePage()));
         break;
       case 2:
         Navigator.push(context,
