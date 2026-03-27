@@ -60,7 +60,7 @@ class _BottomNavControllerState extends State<BottomNavController> {
 
   final List<Widget> _pages = [
     HomePage(),
-    LifestylePlanPage(), // ✅ renamed from Plan → Tips
+    LifestylePage(), // ✅ renamed from Plan → Tips
     AddSymptomsPage(),   // ➕ center
     InsightsPage(),
     ProfilePage(),       // (if you have)
