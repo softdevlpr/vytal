@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'impact_question_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class AddSymptomsPage extends StatefulWidget {
   const AddSymptomsPage({super.key});
@@ -36,6 +37,22 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
         .join(" ");
   }
 
+  Future<void> saveSymptom(String symptom) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    Map<String, int> scores = {};
+
+    final stored = prefs.getString("symptom_scores");
+
+    if (stored != null && stored.isNotEmpty) {
+      scores = Map<String, int>.from(jsonDecode(stored));
+    }
+
+    scores[symptom] = (scores[symptom] ?? 0) + 1;
+
+    await prefs.setString("symptom_scores", jsonEncode(scores));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,7 +64,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
       ),
       body: Column(
         children: [
-          /// 🔥 SCROLLABLE PART
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -101,7 +117,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
             ),
           ),
 
-          /// 🔥 FIXED BUTTON
           Padding(
             padding: const EdgeInsets.all(20),
             child: SizedBox(
@@ -111,17 +126,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                 onPressed: selectedSymptom == null
                     ? null
                     : () async {
-                        final prefs =
-                            await SharedPreferences.getInstance();
-
-                        List<String> storedSymptoms =
-                            prefs.getStringList("symptoms_history") ?? [];
-
-                        // 🔥 Add selected symptom
-                        storedSymptoms.add(selectedSymptom!);
-
-                        await prefs.setStringList(
-                            "symptoms_history", storedSymptoms);
+                        await saveSymptom(selectedSymptom!);
 
                         Navigator.push(
                           context,
@@ -138,10 +143,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                     borderRadius: BorderRadius.circular(18),
                   ),
                 ),
-                child: const Text(
-                  "Next",
-                  style: TextStyle(fontSize: 18),
-                ),
+                child: const Text("Next", style: TextStyle(fontSize: 18)),
               ),
             ),
           ),
