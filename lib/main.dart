@@ -63,7 +63,7 @@ class _BottomNavControllerState extends State<BottomNavController> {
     LifestylePage(), // ✅ renamed from Plan → Tips
     AddSymptomsPage(),   // ➕ center
     InsightsPage(),
-    ProfilePage(),       // (if you have)
+    ProfileSettingsPage(),       // (if you have)
   ];
 
   @override
