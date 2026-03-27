@@ -118,7 +118,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      bottomNavigationBar: Container(
+    /*  bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         color: const Color(0xFF1E1E2C),
         child: Row(
@@ -149,7 +149,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-  }
+  } */
 
   Widget navItem(IconData icon, String label, int index) {
     final isSelected = currentIndex == index;
