@@ -37,7 +37,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
         .join(" ");
   }
 
-  Future<void> saveSymptom(String symptom) async {
+  Future<void> saveSymptomScore() async {
     final prefs = await SharedPreferences.getInstance();
 
     Map<String, int> scores = {};
@@ -48,7 +48,8 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
       scores = Map<String, int>.from(jsonDecode(stored));
     }
 
-    scores[symptom] = (scores[symptom] ?? 0) + 1;
+    //  ONLY increase here (Next button click)
+    scores[selectedSymptom!] = (scores[selectedSymptom!] ?? 0) + 1;
 
     await prefs.setString("symptom_scores", jsonEncode(scores));
   }
@@ -59,7 +60,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
       backgroundColor: const Color(0xFF0F011E),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: const BackButton(color: Colors.white),
       ),
       body: Column(
@@ -68,51 +68,28 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Get test recommendations",
-                    style: GoogleFonts.poppins(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+                children: symptoms.map((symptom) {
+                  final isSelected = selectedSymptom == symptom;
 
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E2C),
-                      borderRadius: BorderRadius.circular(16),
+                  return ListTile(
+                    title: Text(
+                      formatText(symptom),
+                      style: GoogleFonts.poppins(color: Colors.white),
                     ),
-                    child: Column(
-                      children: symptoms.map((symptom) {
-                        final isSelected = selectedSymptom == symptom;
-
-                        return ListTile(
-                          title: Text(
-                            formatText(symptom),
-                            style: GoogleFonts.poppins(color: Colors.white),
-                          ),
-                          trailing: Icon(
-                            isSelected
-                                ? Icons.check_circle
-                                : Icons.radio_button_unchecked,
-                            color: isSelected
-                                ? const Color(0xFF9D4EDD)
-                                : Colors.white38,
-                          ),
-                          onTap: () {
-                            setState(() {
-                              selectedSymptom = symptom;
-                            });
-                          },
-                        );
-                      }).toList(),
+                    trailing: Icon(
+                      isSelected
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
+                      color:
+                          isSelected ? const Color(0xFF9D4EDD) : Colors.white38,
                     ),
-                  ),
-                ],
+                    onTap: () {
+                      setState(() {
+                        selectedSymptom = symptom;
+                      });
+                    },
+                  );
+                }).toList(),
               ),
             ),
           ),
@@ -126,7 +103,8 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                 onPressed: selectedSymptom == null
                     ? null
                     : () async {
-                        await saveSymptom(selectedSymptom!);
+                        //  score increases ONLY here
+                        await saveSymptomScore();
 
                         Navigator.push(
                           context,
@@ -139,11 +117,8 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9D4EDD),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
                 ),
-                child: const Text("Next", style: TextStyle(fontSize: 18)),
+                child: const Text("Next"),
               ),
             ),
           ),
