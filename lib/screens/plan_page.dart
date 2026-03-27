@@ -15,7 +15,6 @@ class LifestylePage extends StatefulWidget {
 class _LifestylePageState extends State<LifestylePage> {
   final String baseUrl = "http://10.0.2.2:8000";
 
-  /// ✅ MATCH BACKEND EXACTLY
   final List<String> categories = [
     "Healthy Lifestyle",
     "Weight Management",
@@ -37,15 +36,9 @@ class _LifestylePageState extends State<LifestylePage> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      /// -----------------------------
-      /// EXISTING DATA (DO NOT CHANGE)
-      /// -----------------------------
       List<String> storedSymptoms =
           prefs.getStringList("symptoms_history") ?? [];
 
-      /// -----------------------------
-      /// 🔥 PERSONALIZATION ADDITION
-      /// -----------------------------
       Map<String, int> symptomScores = {};
 
       String? storedScores = prefs.getString("symptom_scores");
@@ -64,9 +57,6 @@ class _LifestylePageState extends State<LifestylePage> {
         }
       });
 
-      /// -----------------------------
-      /// API CALL (UNCHANGED STRUCTURE)
-      /// -----------------------------
       Map<String, List<String>> grouped = {
         for (var cat in categories) cat: []
       };
@@ -76,8 +66,6 @@ class _LifestylePageState extends State<LifestylePage> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "symptoms": storedSymptoms,
-
-          /// 🔥 extra context (safe, backend can ignore)
           "symptom_scores": symptomScores
         }),
       );
@@ -85,21 +73,15 @@ class _LifestylePageState extends State<LifestylePage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        print("FULL RESPONSE: $data");
-
         List tips = data["recommended_tips"] ?? [];
 
         for (var categoryBlock in tips) {
           String category = categoryBlock["category"] ?? "";
           List tipsList = categoryBlock["tips"] ?? [];
 
-          print("CATEGORY: $category");
-          print("TIPS COUNT: ${tipsList.length}");
-
           if (grouped.containsKey(category)) {
             for (var tip in tipsList) {
               String text = tip["text"] ?? "";
-
               if (text.isNotEmpty) {
                 grouped[category]!.add(text);
               }
@@ -107,8 +89,6 @@ class _LifestylePageState extends State<LifestylePage> {
           }
         }
       }
-
-      print("FINAL GROUPED: $grouped");
 
       final randomRes = await http.get(
         Uri.parse("$baseUrl/random_tips"),
@@ -118,18 +98,30 @@ class _LifestylePageState extends State<LifestylePage> {
         final randomData = jsonDecode(randomRes.body);
         List randomTips = randomData["tips"] ?? [];
 
+        /// 🔥 FIX: shuffle so every category gets different tips
+        randomTips.shuffle();
+
+        int index = 0;
+
         for (var cat in categories) {
-          /// 🔥 PERSONALIZATION ENHANCEMENT (ONLY ADDITION)
           bool isRelevant = topSymptom.isNotEmpty &&
-              cat.toLowerCase().contains(
-                    topSymptom.replaceAll("_", " "),
-                  );
+              cat.toLowerCase().contains(topSymptom.replaceAll("_", " "));
 
           if (grouped[cat]!.isEmpty) {
-            grouped[cat] = randomTips
-                .take(isRelevant ? 5 : 3)
-                .map<String>((t) => t["text"] ?? "")
-                .toList();
+            int takeCount = isRelevant ? 5 : 3;
+
+            List<String> selected = [];
+
+            for (int i = 0; i < takeCount; i++) {
+              if (index >= randomTips.length) {
+                index = 0; // restart if needed
+              }
+
+              selected.add(randomTips[index]["text"] ?? "");
+              index++;
+            }
+
+            grouped[cat] = selected;
           }
         }
       }
@@ -147,15 +139,10 @@ class _LifestylePageState extends State<LifestylePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F011E),
-
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: Text(
-          "Daily Tips",
-          style: GoogleFonts.poppins(),
-        ),
+        title: Text("Daily Tips", style: GoogleFonts.poppins()),
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: isLoading
@@ -164,16 +151,12 @@ class _LifestylePageState extends State<LifestylePage> {
                 children: categories.map((category) {
                   return GestureDetector(
                     onTap: () {
-                      final tips = categorizedTips[category] ?? [];
-
-                      print("SENDING TIPS: $tips");
-
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => CategoryTipsPage(
                             category: category,
-                            tips: tips,
+                            tips: categorizedTips[category] ?? [],
                           ),
                         ),
                       );
@@ -187,12 +170,9 @@ class _LifestylePageState extends State<LifestylePage> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(
-                            Icons.lightbulb_outline,
-                            color: Colors.white,
-                          ),
+                          const Icon(Icons.lightbulb_outline,
+                              color: Colors.white),
                           const SizedBox(width: 12),
-
                           Expanded(
                             child: Text(
                               category,
@@ -203,12 +183,8 @@ class _LifestylePageState extends State<LifestylePage> {
                               ),
                             ),
                           ),
-
-                          const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 16,
-                            color: Colors.white54,
-                          ),
+                          const Icon(Icons.arrow_forward_ios,
+                              size: 16, color: Colors.white54),
                         ],
                       ),
                     ),
