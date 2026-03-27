@@ -127,7 +127,7 @@ class _HomePageState extends State<HomePage> {
 
             navItem(Icons.home, "Home", 0),
 
-            navItem(Icons.check_circle, "Tips", 1),
+            navItem(Icons.check_circle, "Plan", 1),
 
             /// CENTER +
             GestureDetector(
@@ -219,7 +219,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// AFFIRMATION
   Widget _dailyAffirmation() {
     return Container(
       width: double.infinity,
@@ -257,7 +256,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// NAV CARD
   Widget _navigationCard(
     BuildContext context, {
     required String title,
