@@ -13,7 +13,6 @@ class LifestylePage extends StatefulWidget {
 }
 
 class _LifestylePageState extends State<LifestylePage> {
-
   final String baseUrl = "http://10.0.2.2:8000";
 
   /// ✅ MATCH BACKEND EXACTLY
@@ -37,9 +36,37 @@ class _LifestylePageState extends State<LifestylePage> {
   Future<void> fetchTips() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+
+      /// -----------------------------
+      /// EXISTING DATA (DO NOT CHANGE)
+      /// -----------------------------
       List<String> storedSymptoms =
           prefs.getStringList("symptoms_history") ?? [];
 
+      /// -----------------------------
+      /// 🔥 PERSONALIZATION ADDITION
+      /// -----------------------------
+      Map<String, int> symptomScores = {};
+
+      String? storedScores = prefs.getString("symptom_scores");
+
+      if (storedScores != null && storedScores.isNotEmpty) {
+        symptomScores = Map<String, int>.from(jsonDecode(storedScores));
+      }
+
+      String topSymptom = "";
+      int maxScore = 0;
+
+      symptomScores.forEach((key, value) {
+        if (value > maxScore) {
+          maxScore = value;
+          topSymptom = key;
+        }
+      });
+
+      /// -----------------------------
+      /// API CALL (UNCHANGED STRUCTURE)
+      /// -----------------------------
       Map<String, List<String>> grouped = {
         for (var cat in categories) cat: []
       };
@@ -47,7 +74,12 @@ class _LifestylePageState extends State<LifestylePage> {
       final response = await http.post(
         Uri.parse("$baseUrl/recommend"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"symptoms": storedSymptoms}),
+        body: jsonEncode({
+          "symptoms": storedSymptoms,
+
+          /// 🔥 extra context (safe, backend can ignore)
+          "symptom_scores": symptomScores
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -78,16 +110,24 @@ class _LifestylePageState extends State<LifestylePage> {
 
       print("FINAL GROUPED: $grouped");
 
-      final randomRes = await http.get(Uri.parse("$baseUrl/random_tips"));
+      final randomRes = await http.get(
+        Uri.parse("$baseUrl/random_tips"),
+      );
 
       if (randomRes.statusCode == 200) {
         final randomData = jsonDecode(randomRes.body);
         List randomTips = randomData["tips"] ?? [];
 
         for (var cat in categories) {
+          /// 🔥 PERSONALIZATION ENHANCEMENT (ONLY ADDITION)
+          bool isRelevant = topSymptom.isNotEmpty &&
+              cat.toLowerCase().contains(
+                    topSymptom.replaceAll("_", " "),
+                  );
+
           if (grouped[cat]!.isEmpty) {
             grouped[cat] = randomTips
-                .take(3)
+                .take(isRelevant ? 5 : 3)
                 .map<String>((t) => t["text"] ?? "")
                 .toList();
           }
@@ -98,7 +138,6 @@ class _LifestylePageState extends State<LifestylePage> {
         categorizedTips = grouped;
         isLoading = false;
       });
-
     } catch (e) {
       print("ERROR: $e");
     }
@@ -138,8 +177,7 @@ class _LifestylePageState extends State<LifestylePage> {
                           ),
                         ),
                       );
-                    }, // ✅ FIXED (comma added here)
-
+                    },
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 15),
                       padding: const EdgeInsets.all(18),
@@ -149,8 +187,10 @@ class _LifestylePageState extends State<LifestylePage> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.lightbulb_outline,
-                              color: Colors.white),
+                          const Icon(
+                            Icons.lightbulb_outline,
+                            color: Colors.white,
+                          ),
                           const SizedBox(width: 12),
 
                           Expanded(
@@ -164,8 +204,11 @@ class _LifestylePageState extends State<LifestylePage> {
                             ),
                           ),
 
-                          const Icon(Icons.arrow_forward_ios,
-                              size: 16, color: Colors.white54),
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: Colors.white54,
+                          ),
                         ],
                       ),
                     ),
