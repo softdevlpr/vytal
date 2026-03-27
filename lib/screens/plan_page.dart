@@ -34,75 +34,75 @@ class _LifestylePageState extends State<LifestylePage> {
     fetchTips();
   }
 
-Future<void> fetchTips() async {
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> storedSymptoms =
-        prefs.getStringList("symptoms_history") ?? [];
+  Future<void> fetchTips() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<String> storedSymptoms =
+          prefs.getStringList("symptoms_history") ?? [];
 
-    Map<String, List<String>> grouped = {
-      for (var cat in categories) cat: []
-    };
+      Map<String, List<String>> grouped = {
+        for (var cat in categories) cat: []
+      };
 
-    final response = await http.post(
-      Uri.parse("$baseUrl/recommend"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"symptoms": storedSymptoms}),
-    );
+      final response = await http.post(
+        Uri.parse("$baseUrl/recommend"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"symptoms": storedSymptoms}),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-      print("FULL RESPONSE: $data"); // 🔥 DEBUG
+        print("FULL RESPONSE: $data");
 
-      List tips = data["recommended_tips"] ?? [];
+        List tips = data["recommended_tips"] ?? [];
 
-      for (var categoryBlock in tips) {
-        String category = categoryBlock["category"] ?? "";
-        List tipsList = categoryBlock["tips"] ?? [];
+        for (var categoryBlock in tips) {
+          String category = categoryBlock["category"] ?? "";
+          List tipsList = categoryBlock["tips"] ?? [];
 
-        print("CATEGORY: $category");
-        print("TIPS COUNT: ${tipsList.length}");
+          print("CATEGORY: $category");
+          print("TIPS COUNT: ${tipsList.length}");
 
-        if (grouped.containsKey(category)) {
-          for (var tip in tipsList) {
-            String text = tip["text"] ?? "";
+          if (grouped.containsKey(category)) {
+            for (var tip in tipsList) {
+              String text = tip["text"] ?? "";
 
-            if (text.isNotEmpty) {
-              grouped[category]!.add(text);
+              if (text.isNotEmpty) {
+                grouped[category]!.add(text);
+              }
             }
           }
         }
       }
-    }
 
-    print("FINAL GROUPED: $grouped"); // 🔥 DEBUG
+      print("FINAL GROUPED: $grouped");
 
-    final randomRes = await http.get(Uri.parse("$baseUrl/random_tips"));
+      final randomRes = await http.get(Uri.parse("$baseUrl/random_tips"));
 
-    if (randomRes.statusCode == 200) {
-      final randomData = jsonDecode(randomRes.body);
-      List randomTips = randomData["tips"] ?? [];
+      if (randomRes.statusCode == 200) {
+        final randomData = jsonDecode(randomRes.body);
+        List randomTips = randomData["tips"] ?? [];
 
-      for (var cat in categories) {
-        if (grouped[cat]!.isEmpty) {
-          grouped[cat] = randomTips
-              .take(3)
-              .map<String>((t) => t["text"] ?? "")
-              .toList();
+        for (var cat in categories) {
+          if (grouped[cat]!.isEmpty) {
+            grouped[cat] = randomTips
+                .take(3)
+                .map<String>((t) => t["text"] ?? "")
+                .toList();
+          }
         }
       }
+
+      setState(() {
+        categorizedTips = grouped;
+        isLoading = false;
+      });
+
+    } catch (e) {
+      print("ERROR: $e");
     }
-
-    setState(() {
-      categorizedTips = grouped;
-      isLoading = false;
-    });
-
-  } catch (e) {
-    print("ERROR: $e");
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -125,20 +125,21 @@ Future<void> fetchTips() async {
                 children: categories.map((category) {
                   return GestureDetector(
                     onTap: () {
-                    final tips = categorizedTips[category] ?? [];
+                      final tips = categorizedTips[category] ?? [];
 
-                    print("SENDING TIPS: $tips"); // 🔥 DEBUG
+                      print("SENDING TIPS: $tips");
 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CategoryTipsPage(
-                         category: category,
-                         tips: tips,
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CategoryTipsPage(
+                            category: category,
+                            tips: tips,
+                          ),
                         ),
-                      ),
-                    );
-                  }
+                      );
+                    }, // ✅ FIXED (comma added here)
+
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 15),
                       padding: const EdgeInsets.all(18),
