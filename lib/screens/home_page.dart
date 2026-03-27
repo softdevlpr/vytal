@@ -118,38 +118,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        color: const Color(0xFF1E1E2C),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-
-            navItem(Icons.home, "Home", 0),
-
-            navItem(Icons.check_circle, "Plan", 1),
-
-            /// CENTER +
-            GestureDetector(
-              onTap: () => handleNavigation(2),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-                child: const Icon(Icons.add, color: Colors.black),
-              ),
-            ),
-
-            navItem(Icons.bar_chart, "Insights", 3),
-
-            navItem(Icons.person, "Profile", 4),
-          ],
-        ),
-      ),
-    );
-  }
+      
 
   Widget navItem(IconData icon, String label, int index) {
     final isSelected = currentIndex == index;
