@@ -34,65 +34,72 @@ class _LifestylePageState extends State<LifestylePage> {
     fetchTips();
   }
 
-  Future<void> fetchTips() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      List<String> storedSymptoms =
-          prefs.getStringList("symptoms_history") ?? [];
+Future<void> fetchTips() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> storedSymptoms =
+        prefs.getStringList("symptoms_history") ?? [];
 
-      Map<String, List<String>> grouped = {
-        for (var cat in categories) cat: []
-      };
+    Map<String, List<String>> grouped = {
+      for (var cat in categories) cat: []
+    };
 
-      /// 🔥 CALL RECOMMEND API
-      final response = await http.post(
-        Uri.parse("$baseUrl/recommend"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"symptoms": storedSymptoms}),
-      );
+    /// 🔥 CALL RECOMMEND API
+    final response = await http.post(
+      Uri.parse("$baseUrl/recommend"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"symptoms": storedSymptoms}),
+    );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        List tips = data["recommended_tips"] ?? [];
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      List tips = data["recommended_tips"] ?? [];
 
-        for (var categoryBlock in tips) {
-          String category = categoryBlock["category"] ?? "";
-          List tipsList = categoryBlock["tips"] ?? [];
+      /// ✅ FIX: ADD ALL TIPS (DON'T OVERWRITE)
+      for (var categoryBlock in tips) {
+        String category = categoryBlock["category"] ?? "";
+        List tipsList = categoryBlock["tips"] ?? [];
 
-          if (grouped.containsKey(category)) {
-            grouped[category] = tipsList
-                .map<String>((t) => t["text"] ?? "")
-                .toList();
+        if (grouped.containsKey(category)) {
+          for (var tip in tipsList) {
+            if (tip["text"] != null &&
+                !grouped[category]!.contains(tip["text"])) {
+              grouped[category]!.add(tip["text"]);
+            }
           }
         }
       }
-
-      /// 🔥 RANDOM FILL
-      final randomRes = await http.get(Uri.parse("$baseUrl/random_tips"));
-
-      if (randomRes.statusCode == 200) {
-        final randomData = jsonDecode(randomRes.body);
-        List randomTips = randomData["tips"] ?? [];
-
-        for (var cat in categories) {
-          if (grouped[cat]!.isEmpty) {
-            grouped[cat] = randomTips
-                .take(3)
-                .map<String>((t) => t["text"] ?? "")
-                .toList();
-          }
-        }
-      }
-
-      setState(() {
-        categorizedTips = grouped;
-        isLoading = false;
-      });
-
-    } catch (e) {
-      print("ERROR: $e");
     }
+
+    /// 🔥 RANDOM FILL
+    final randomRes = await http.get(Uri.parse("$baseUrl/random_tips"));
+
+    if (randomRes.statusCode == 200) {
+      final randomData = jsonDecode(randomRes.body);
+      List randomTips = randomData["tips"] ?? [];
+
+      for (var cat in categories) {
+        if (grouped[cat]!.isEmpty) {
+          grouped[cat] = randomTips
+              .take(3)
+              .map<String>((t) => t["text"] ?? "")
+              .toList();
+        }
+      }
+    }
+
+    /// DEBUG (optional)
+    print("FINAL DATA: $grouped");
+
+    setState(() {
+      categorizedTips = grouped;
+      isLoading = false;
+    });
+
+  } catch (e) {
+    print("ERROR: $e");
   }
+}
 
   @override
   Widget build(BuildContext context) {
