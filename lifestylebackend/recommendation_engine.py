@@ -1,45 +1,43 @@
-from database import load_tips
+from database import load_tips, update_user_symptom, get_user_symptoms
 import random
-import json
-import os
 
-USER_DATA_FILE = "user_data.json"
-
-
-# 🔥 LOAD USER SCORES
-def load_user_data():
-    if not os.path.exists(USER_DATA_FILE):
-        return {}
-    with open(USER_DATA_FILE, "r") as f:
-        return json.load(f)
-
-
-# 🔥 SAVE USER SCORES
-def save_user_data(data):
-    with open(USER_DATA_FILE, "w") as f:
-        json.dump(data, f)
+# -----------------------------
+# CONFIG
+# -----------------------------
+CATEGORIES = [
+    "Healthy Lifestyle",
+    "Weight Management",
+    "Fitness & Strength",
+    "Condition Support",
+    "Energy and Productivity"
+]
 
 
-def recommend_tips(user_symptoms):
+# -----------------------------
+# MAIN FUNCTION
+# -----------------------------
+def recommend_tips(user_id, user_symptoms):
 
     tips = load_tips()
-    user_data = load_user_data()
 
-    # ✅ STEP 1: UPDATE SYMPTOM SCORES
+    # ✅ STEP 1: UPDATE SYMPTOM SCORES IN MONGO (ONLY ON BUTTON CLICK)
     for symptom in user_symptoms:
-        user_data[symptom] = user_data.get(symptom, 0) + 1
+        update_user_symptom(user_id, symptom)
 
-    save_user_data(user_data)
+    # ✅ STEP 2: LOAD UPDATED USER PROFILE
+    user_data = get_user_symptoms(user_id)
 
     scored_tips = []
 
-    # ✅ STEP 2: SCORE TIPS USING PERSONALIZATION
+    # -----------------------------
+    # STEP 3: SCORE TIPS (PERSONALIZATION)
+    # -----------------------------
     for tip in tips:
         score = 0
+        tip_symptoms = tip.get("symptoms", [])
 
-        for symptom in tip["symptoms"]:
-            if symptom in user_data:
-                score += user_data[symptom]  # 🔥 weighted score
+        for symptom in tip_symptoms:
+            score += user_data.get(symptom, 0)
 
         if score > 0:
             scored_tips.append({
@@ -47,47 +45,49 @@ def recommend_tips(user_symptoms):
                 "score": score
             })
 
-    # ✅ STEP 3: SORT
+    # Sort by score (highest first)
     scored_tips.sort(key=lambda x: x["score"], reverse=True)
 
-    # ✅ STEP 4: CATEGORIES
-    categories = [
-        "Healthy Lifestyle",
-        "Weight Management",
-        "Fitness & Strength",
-        "Condition Support",
-        "Energy and Productivity"
-    ]
+    # -----------------------------
+    # STEP 4: GROUP BY CATEGORY (STRICT)
+    # -----------------------------
+    grouped = {cat: [] for cat in CATEGORIES}
 
-    grouped = {cat: [] for cat in categories}
-
-    # ✅ STEP 5: GROUP
     for item in scored_tips:
         tip = item["tip"]
-        category = tip["category"]
+        category = tip.get("category")
 
         if category in grouped:
             grouped[category].append(tip)
 
-    # ✅ STEP 6: LIMIT (TOP 5)
+    # Limit top 5 per category
     for category in grouped:
         grouped[category] = grouped[category][:5]
 
-    # ✅ STEP 7: RANDOM FILL
-    for category in categories:
-        if not grouped[category]:
-            category_tips = [t for t in tips if t["category"] == category]
+    # -----------------------------
+    # STEP 5: CATEGORY-WISE FALLBACK (NO MIXING FIX)
+    # -----------------------------
+    for category in CATEGORIES:
 
-            if category_tips:
+        if len(grouped[category]) == 0:
+
+            category_tips = [
+                t for t in tips
+                if t.get("category") == category
+            ]
+
+            if len(category_tips) > 0:
                 grouped[category] = random.sample(
                     category_tips,
                     min(3, len(category_tips))
                 )
 
-    # ✅ STEP 8: FINAL FORMAT
+    # -----------------------------
+    # STEP 6: FINAL RESPONSE FORMAT
+    # -----------------------------
     result = []
 
-    for category in categories:
+    for category in CATEGORIES:
         result.append({
             "category": category,
             "tips": grouped[category]
