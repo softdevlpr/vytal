@@ -32,38 +32,20 @@ class CategoryTipsPage extends StatelessWidget {
               itemCount: tips.length,
               itemBuilder: (_, index) {
                 return Container(
+                  width: double.infinity,
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1E1E2C),
                     borderRadius: BorderRadius.circular(18),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 6,
-                        offset: Offset(0, 3),
-                      )
-                    ],
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.check_circle,
-                          color: Colors.greenAccent, size: 26),
-                      const SizedBox(width: 14),
-
-                      /// BIGGER TEXT + CLEAN LOOK
-                      Expanded(
-                        child: Text(
-                          tips[index],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 17, //  bigger text
-                            height: 1.4,   //  better readability
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    tips[index],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18, // 🔥 bigger
+                      height: 1.5,
+                    ),
                   ),
                 );
               },
