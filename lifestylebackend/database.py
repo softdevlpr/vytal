@@ -1,35 +1,33 @@
 from pymongo import MongoClient
+from dotenv import load_dotenv
+import os
 
-#  MongoDB Connection
-MONGO_URI=mongodb+srv://vytaluser:Vytal123@vytalcluster.0hcdsof.mongodb.net/VYTALDB?appName=VytalCluster
+# Load environment variables
+load_dotenv()
+
+# Get URI from .env
+MONGO_URI = os.getenv("MONGO_URI")
+
+if not MONGO_URI:
+    raise Exception("MONGO_URI not found in .env file")
 
 client = MongoClient(MONGO_URI)
 
-#  Your database name (as you said)
 db = client["VYTALDB"]
 
-# Collections (equivalent to JSON files)
 tips_collection = db["tips"]
 users_collection = db["users"]
 
 
 # -----------------------------
-#  REPLACE load_tips()
+# LOAD TIPS
 # -----------------------------
 def load_tips():
-    tips = list(tips_collection.find({}, {"_id": 0}))
-    return tips
+    return list(tips_collection.find({}, {"_id": 0}))
 
 
 # -----------------------------
-# OPTIONAL: Save tips (if needed later)
-# -----------------------------
-def save_tip(tip):
-    tips_collection.insert_one(tip)
-
-
-# -----------------------------
-# USER SYMPTOM STORAGE
+# UPDATE SYMPTOM SCORE
 # -----------------------------
 def update_user_symptom(user_id, symptom):
     users_collection.update_one(
@@ -40,7 +38,7 @@ def update_user_symptom(user_id, symptom):
 
 
 # -----------------------------
-# GET USER DATA
+# GET USER SYMPTOMS
 # -----------------------------
 def get_user_symptoms(user_id):
     user = users_collection.find_one({"user_id": user_id})
