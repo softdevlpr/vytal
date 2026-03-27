@@ -18,8 +18,8 @@ environment:
   sdk: ^3.10.4
 
 # Dependencies specify other packages that your package needs in order to work.
-dependencies:
-  flutter:
+dev_dependencies:
+  flutter_test:
     sdk: flutter
 
   http: ^1.6.0
