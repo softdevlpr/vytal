@@ -15,27 +15,16 @@ def home():
 
 
 @app.post("/recommend")
-
 def get_recommendations(data: dict):
-
-    user_symptoms = data["symptoms"]
-
+    user_symptoms = data.get("symptoms", [])
     results = recommend_tips(user_symptoms)
-
     return {"recommended_tips": results}
 
-@app.get("/tips")
-def get_tips_by_category(category: str):
-    filtered = [tip for tip in tips if tip["category"] == category]
-    return filtered
 
 @app.get("/random_tips")
-
 def random_tips():
-
     return {"tips": random.sample(tips, 10)}
 
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True)
-
