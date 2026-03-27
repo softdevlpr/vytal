@@ -1,118 +1,75 @@
 import 'package:flutter/material.dart';
-import 'diet_plan_page.dart';
-import 'lifestyle_plan_page.dart';
-import 'exercise_plan_page.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'tips_page.dart';
 
-class PlanPage extends StatelessWidget {
-  const PlanPage({super.key});
+class LifestylePage extends StatelessWidget {
+  const LifestylePage({super.key});
+
+  final List<Map<String, String>> categories = const [
+    {"title": "Healthy Lifestyle", "key": "healthy_lifestyle"},
+    {"title": "Weight Management", "key": "weight_management"},
+    {"title": "Fitness & Strength", "key": "fitness_strength"},
+    {"title": "Wellness Support", "key": "wellness_support"},
+    {"title": "Energy & Productivity", "key": "energy_productivity"},
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F011E),
+
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F011E),
-        elevation: 0,
-        title: const Text("Your Daily Plan"),
+        backgroundColor: Colors.transparent,
+        title: Text(
+          "Daily Tips",
+          style: GoogleFonts.poppins(),
+        ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          children: [
-
-            GestureDetector(
+          children: categories.map((cat) {
+            return GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const DietPlanPage(),
+                    builder: (_) => TipsPage(category: cat["key"]!),
                   ),
                 );
               },
-              child: _planCard(
-                title: "Diet Plan",
-                subtitle: "Personalized meals for your body",
-                icon: Icons.restaurant,
-              ),
-            ),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 15),
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E1E2C),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.lightbulb_outline, color: Colors.white),
+                    const SizedBox(width: 12),
 
-            const SizedBox(height: 16),
+                    Expanded(
+                      child: Text(
+                        cat["title"]!,
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
 
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const LifestylePlanPage(),
-                  ),
-                );
-              },
-              child: _planCard(
-                title: "Lifestyle",
-                subtitle: "Sleep, hydration & habits",
-                icon: Icons.self_improvement,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ExercisePlanPage(),
-                  ),
-                );
-              },
-              child: _planCard(
-                title: "Exercise",
-                subtitle: "Gentle workouts & activity",
-                icon: Icons.fitness_center,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _planCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6A00F4), Color(0xFF9D4EDD)],
-        ),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 30),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 16, color: Colors.white54),
+                  ],
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ],
-          ),
-        ],
+            );
+          }).toList(),
+        ),
       ),
     );
   }
