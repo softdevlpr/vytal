@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'category_tips_page.dart';
 
 class LifestylePlanPage extends StatefulWidget {
   const LifestylePlanPage({super.key});
@@ -15,7 +16,6 @@ class _LifestylePlanPageState extends State<LifestylePlanPage> {
   final String baseUrl = "http://10.0.2.2:8000";
 
   Map<String, List<String>> categorizedTips = {};
-  String selectedCategory = "Healthy Lifestyle";
   bool isLoading = true;
 
   /// ✅ MATCH BACKEND EXACTLY
@@ -54,7 +54,6 @@ class _LifestylePlanPageState extends State<LifestylePlanPage> {
         final data = jsonDecode(response.body);
         List tips = data["recommended_tips"] ?? [];
 
-        /// ✅ CORRECT PARSING
         for (var categoryBlock in tips) {
           String category = categoryBlock["category"] ?? "";
           List tipsList = categoryBlock["tips"] ?? [];
@@ -67,7 +66,7 @@ class _LifestylePlanPageState extends State<LifestylePlanPage> {
         }
       }
 
-      /// 🔥 SINGLE RANDOM CALL (OPTIMIZED)
+      /// 🔥 SINGLE RANDOM CALL
       final randomRes = await http.get(Uri.parse("$baseUrl/random_tips"));
 
       if (randomRes.statusCode == 200) {
@@ -95,7 +94,6 @@ class _LifestylePlanPageState extends State<LifestylePlanPage> {
     }
   }
 
-  /// 🔥 FALLBACK
   Future<void> loadRandomForAllCategories() async {
     Map<String, List<String>> grouped = {
       for (var cat in categories) cat: []
@@ -132,110 +130,61 @@ class _LifestylePlanPageState extends State<LifestylePlanPage> {
 
       appBar: AppBar(
         backgroundColor: const Color(0xFF0F011E),
-        title: const Text("Lifestyle Plan"),
+        title: const Text("Daily Tips"),
       ),
 
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-
-            /// 🔘 CATEGORY BUTTONS
-            SizedBox(
-              height: 45,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView.builder(
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
                   final category = categories[index];
 
                   return GestureDetector(
                     onTap: () {
-                      setState(() {
-                        selectedCategory = category;
-                      });
+                      final tips = categorizedTips[category] ?? [];
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CategoryTipsPage(
+                            category: category,
+                            tips: tips,
+                          ),
+                        ),
+                      );
                     },
                     child: Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: selectedCategory == category
-                            ? Colors.purple
-                            : const Color(0xFF1E1E2C),
-                        borderRadius: BorderRadius.circular(20),
+                        color: const Color(0xFF1E1E2C),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        category,
-                        style: const TextStyle(color: Colors.white),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.lightbulb_outline,
+                              color: Colors.white),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              category,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios,
+                              color: Colors.white, size: 16),
+                        ],
                       ),
                     ),
                   );
                 },
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// 📦 TIPS LIST
-            Expanded(
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : categorizedTips[selectedCategory] == null ||
-                          categorizedTips[selectedCategory]!.isEmpty
-                      ? const Center(
-                          child: Text(
-                            "No tips available",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        )
-                      : ListView(
-                          children:
-                              categorizedTips[selectedCategory]!
-                                  .map((tip) => _LifestyleTile(
-                                        icon: Icons.check_circle,
-                                        title: tip,
-                                      ))
-                                  .toList(),
-                        ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 🔹 TILE
-class _LifestyleTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-
-  const _LifestyleTile({
-    required this.icon,
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E2C),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
       ),
     );
   }
