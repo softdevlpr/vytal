@@ -37,7 +37,18 @@ def get_recommendations(data: RecommendRequest):
             data.symptoms or []
         )
 
-        return {"recommended_tips": results}
+        # ✅ FIX: CLEAN RESPONSE FOR UI (ONLY tip_text)
+        clean_results = []
+
+        for tip in results:
+            if isinstance(tip, str):
+                clean_results.append(tip)
+
+            elif isinstance(tip, dict):
+                if "tip_text" in tip and tip["tip_text"]:
+                    clean_results.append(tip["tip_text"])
+
+        return {"recommended_tips": clean_results}
 
     except Exception as e:
         print("ERROR:", str(e))
