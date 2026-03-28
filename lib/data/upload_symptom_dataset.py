@@ -7,7 +7,7 @@ from datetime import datetime
 # -----------------------------
 # LOAD ENV VARIABLES
 # -----------------------------
-load_dotenv(dotenv_path="D:\vytal\.env")
+load_dotenv(dotenv_path=r"D:\vytal\.env")
 
 MONGO_URI = os.getenv("MONGO_URI")
 
