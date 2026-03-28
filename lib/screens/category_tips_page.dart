@@ -25,8 +25,23 @@ class CategoryTipsPage extends StatelessWidget {
   }
 
   Widget _buildBody() {
+    // ✅ CLEAN + FILTER INVALID TIPS (IMPORTANT FIX)
+    final cleanTips = tips.where((tip) {
+      if (tip == null) return false;
+
+      if (tip is String) {
+        return tip.trim().isNotEmpty;
+      }
+
+      if (tip is Map && tip["tip_text"] != null) {
+        return tip["tip_text"].toString().trim().isNotEmpty;
+      }
+
+      return tip.toString().trim().isNotEmpty;
+    }).toList();
+
     // 🚨 SAFE CHECK
-    if (tips.isEmpty) {
+    if (cleanTips.isEmpty) {
       return const Center(
         child: Text(
           "No tips available",
@@ -37,13 +52,10 @@ class CategoryTipsPage extends StatelessWidget {
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: tips.length,
+      itemCount: cleanTips.length,
       itemBuilder: (_, index) {
-        final tip = tips[index];
+        final tip = cleanTips[index];
 
-        // ✅ HANDLE BOTH CASES:
-        // 1. String format
-        // 2. Map format from backend
         String tipText;
 
         if (tip is String) {
@@ -52,6 +64,11 @@ class CategoryTipsPage extends StatelessWidget {
           tipText = tip["tip_text"] ?? "";
         } else {
           tipText = tip.toString();
+        }
+
+        // 🚨 FINAL SAFETY CHECK (prevents blank boxes)
+        if (tipText.trim().isEmpty) {
+          return const SizedBox.shrink();
         }
 
         return Container(
