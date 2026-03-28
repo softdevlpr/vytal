@@ -32,7 +32,9 @@ def recommend_tips(user_id, user_symptoms):
 
         print("CLEANED SYMPTOMS:", unique_symptoms)
 
-        for symptom in unique_symptoms:
+        if unique_symptoms and len(unique_symptoms) > 0:
+            symptom = unique_symptoms[0]  # ONLY FIRST SYMPTOM
+
             update_user_symptom(user_id, symptom)
 
     # -----------------------------
