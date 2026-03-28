@@ -6,7 +6,7 @@ from datetime import datetime
 # CONFIG
 # -----------------------------
 MONGO_URI = "mongodb://localhost:27017/"
-DB_NAME = "cardiac_app_db"
+DB_NAME = "VYTALDB"
 COLLECTION_NAME = "symptom_dataset"
 EXCEL_FILE = "symptom_v5.xlsx"   # make sure file is in same folder
 
