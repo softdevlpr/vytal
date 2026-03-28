@@ -1,173 +1,307 @@
 """
-api/app.py
-----------
-Flask REST API that exposes the symptom → test prediction system.
-
-HOW TO RUN:
-    cd cardiac_app/
-    python api/app.py
-
-ENDPOINTS:
-
-  GET  /symptoms
-       Returns list of all valid symptoms.
-
-  GET  /questions/<symptom>
-       Returns the 6 questions for a given symptom.
-
-  POST /predict
-       Body (JSON):
-         {
-           "primary_symptom": "Chest Pain",
-           "answers": { "Q1": 1, "Q2": 3, "Q3": 1, "Q4": 1, "Q5": 0, "Q6": 1 }
-         }
-       Returns urgency + recommended tests.
-
-  GET  /records?symptom=Chest Pain&urgency=Urgent&limit=10
-       Queries MongoDB for matching records.
-
-  GET  /urgency-definitions
-       Returns all 3 urgency level definitions.
+backend/app.py  —  Extended Flask API
+Covers all routes the Flutter app needs.
+Run: python backend/app.py
 """
 
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
+import os, sys
+from datetime import datetime, timedelta
+from collections import defaultdict
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from pymongo import MongoClient
+from bson import ObjectId
+from dotenv import load_dotenv
 
+sys.path.append(os.path.dirname(__file__))
 from model.predict import predict_for_user
-from db.mongo_connect import get_collection
-from utils.questions import QUESTIONS, SYMPTOMS_LIST, URGENCY_DEFINITIONS
+
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # allows your frontend (React/etc.) to call this API
+CORS(app)
+
+client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))
+db = client["cardiac_app_db"]
+
+def ok(data):    return jsonify({"success": True,  "data": data})
+def err(msg, c=400): return jsonify({"success": False, "error": msg}), c
+def clean(doc):
+    doc["_id"] = str(doc["_id"])
+    return doc
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def error(message, code=400):
-    return jsonify({"success": False, "error": message}), code
-
-
-def ok(data):
-    return jsonify({"success": True, "data": data})
-
-
-# ── Routes ────────────────────────────────────────────────────────────────────
-
-@app.route("/symptoms", methods=["GET"])
-def get_symptoms():
-    """Return list of all available symptoms."""
-    return ok(SYMPTOMS_LIST)
-
-
-@app.route("/questions/<path:symptom>", methods=["GET"])
-def get_questions(symptom):
-    """Return the 6 follow-up questions for a given symptom."""
-    if symptom not in QUESTIONS:
-        return error(f"Unknown symptom: '{symptom}'. Use GET /symptoms for valid options.")
-    return ok({
-        "symptom":   symptom,
-        "questions": QUESTIONS[symptom]
-    })
-
-
+# ── PREDICTION ────────────────────────────────────────────────────────────────
 @app.route("/predict", methods=["POST"])
 def predict():
-    """
-    Accept user symptom + answers, return urgency + recommended tests.
-    Also saves the prediction to MongoDB for audit/history.
-    """
-    body = request.get_json(silent=True)
-    if not body:
-        return error("Request body must be JSON.")
-
-    symptom = body.get("primary_symptom", "").strip()
+    body = request.json or {}
+    symptom = body.get("primary_symptom", "")
     answers = body.get("answers", {})
-
-    # Validate
-    if not symptom:
-        return error("'primary_symptom' is required.")
-    if symptom not in QUESTIONS:
-        return error(f"Unknown symptom: '{symptom}'.")
-    for q in ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"]:
-        if q not in answers:
-            return error(f"Missing answer for {q}.")
-        if not isinstance(answers[q], (int, float)):
-            return error(f"Answer for {q} must be a number (0/1 for Yes/No, 1-3 for scale).")
-
-    # Predict
+    if not symptom or len(answers) < 6:
+        return err("primary_symptom and 6 answers required")
     try:
         result = predict_for_user(symptom, answers)
-    except ValueError as e:
-        return error(str(e))
-    except FileNotFoundError:
-        return error("Model not found. Please run: python model/train_model.py", 500)
-
-    # Save to MongoDB (optional audit log)
-    try:
-        collection = get_collection()
-        collection.insert_one({
-            "type":             "prediction_log",
-            "primary_symptom":  symptom,
-            "answers":          answers,
-            "urgency":          result["urgency"],
-            "recommended_tests": result["recommended_tests"],
-        })
-    except Exception:
-        pass  # don't fail the response if DB is down
-
-    return ok(result)
+        return ok(result)
+    except Exception as e:
+        return err(str(e), 500)
 
 
-@app.route("/records", methods=["GET"])
-def get_records():
-    """
-    Query MongoDB for dataset records.
-    Query params: symptom, urgency, limit (default 20)
-    """
-    symptom = request.args.get("symptom")
-    urgency = request.args.get("urgency")
-    limit   = int(request.args.get("limit", 20))
+# ── SYMPTOM LOGS ───────────────────────────────────────────────────────────────
+@app.route("/logs", methods=["POST"])
+def add_log():
+    body = request.json or {}
+    uid = body.get("uid")
+    if not uid:
+        return err("uid required")
 
-    query = {"type": {"$ne": "prediction_log"}}  # exclude prediction logs
+    body["logged_at"] = datetime.utcnow().isoformat()
+    db.symptom_logs.insert_one(body)
+
+    # Update user's symptom score
+    symptom = body.get("primary_symptom", "")
     if symptom:
-        query["primary_symptom"] = symptom
-    if urgency:
-        query["urgency"] = urgency
-
-    collection = get_collection()
-    docs = list(collection.find(query, {"_id": 0}).limit(limit))
-    return ok({"count": len(docs), "records": docs})
+        db.users.update_one(
+            {"uid": uid},
+            {"$inc": {f"symptom_scores.{symptom}": 1}},
+        )
+    return ok({"message": "Log saved"})
 
 
-@app.route("/urgency-definitions", methods=["GET"])
-def urgency_definitions():
-    """Return formal definitions for all 3 urgency levels."""
-    return ok(URGENCY_DEFINITIONS)
+@app.route("/logs", methods=["GET"])
+def get_logs():
+    uid = request.args.get("uid")
+    period = request.args.get("period", "week")  # week / month / year
+    if not uid:
+        return err("uid required")
+
+    now = datetime.utcnow()
+    if period == "week":
+        since = now - timedelta(days=7)
+    elif period == "month":
+        since = now - timedelta(days=30)
+    else:
+        since = now - timedelta(days=365)
+
+    logs = list(db.symptom_logs.find(
+        {"uid": uid, "logged_at": {"$gte": since.isoformat()}},
+        sort=[("logged_at", -1)]
+    ))
+    return ok({"logs": [clean(l) for l in logs], "count": len(logs)})
 
 
-@app.route("/stats", methods=["GET"])
-def stats():
-    """Return basic stats from MongoDB."""
-    collection = get_collection()
-    data_query = {"type": {"$ne": "prediction_log"}}
-    return ok({
-        "total_records":   collection.count_documents(data_query),
-        "total_symptoms":  len(SYMPTOMS_LIST),
-        "urgency_counts": {
-            u: collection.count_documents({**data_query, "urgency": u})
-            for u in ["Urgent", "Soon", "Routine"]
+# ── INSIGHTS ───────────────────────────────────────────────────────────────────
+@app.route("/insights", methods=["GET"])
+def insights():
+    uid = request.args.get("uid")
+    period = request.args.get("period", "week")
+    if not uid:
+        return err("uid required")
+
+    now = datetime.utcnow()
+    if period == "week":
+        since = now - timedelta(days=7)
+        prev  = now - timedelta(days=14)
+        label_fmt = "%a"
+    elif period == "month":
+        since = now - timedelta(days=30)
+        prev  = now - timedelta(days=60)
+        label_fmt = "%d %b"
+    else:
+        since = now - timedelta(days=365)
+        prev  = now - timedelta(days=730)
+        label_fmt = "%b"
+
+    logs = list(db.symptom_logs.find(
+        {"uid": uid, "logged_at": {"$gte": since.isoformat()}}
+    ))
+
+    if not logs:
+        return ok({})
+
+    # Symptom frequency
+    sym_freq = defaultdict(int)
+    urgency_count = defaultdict(int)
+    chart_by_day = defaultdict(list)
+
+    for log in logs:
+        sym_freq[log.get("primary_symptom", "")] += 1
+        urgency_count[log.get("urgency", "Routine")] += 1
+        day = log.get("logged_at", "")[:10]
+        chart_by_day[day].append(log.get("severity_score", 0))
+
+    # Chart points
+    sorted_days = sorted(chart_by_day.keys())
+    chart_points = [
+        {
+            "label": datetime.strptime(d, "%Y-%m-%d").strftime(label_fmt),
+            "score": round(sum(chart_by_day[d]) / len(chart_by_day[d]), 1),
         }
+        for d in sorted_days
+    ]
+
+    top_symptom = max(sym_freq, key=sym_freq.get) if sym_freq else "None"
+
+    # Compare to previous period for improvement message
+    prev_logs = list(db.symptom_logs.find(
+        {"uid": uid, "logged_at": {"$gte": prev.isoformat(), "$lt": since.isoformat()}}
+    ))
+    prev_urgent = sum(1 for l in prev_logs if l.get("urgency") == "Urgent")
+    curr_urgent = urgency_count.get("Urgent", 0)
+
+    improvement = None
+    if prev_urgent > curr_urgent:
+        improvement = f"Great progress! Your Urgent symptom instances dropped from {prev_urgent} to {curr_urgent} compared to the previous period."
+    elif prev_urgent == 0 and curr_urgent == 0:
+        improvement = "You had no urgent symptoms this period. Keep it up!"
+
+    return ok({
+        "total_logs": len(logs),
+        "top_symptom": top_symptom,
+        "urgency_breakdown": dict(urgency_count),
+        "symptom_frequency": dict(sorted(sym_freq.items(), key=lambda x: -x[1])),
+        "chart_points": chart_points,
+        "improvement": improvement,
     })
 
 
-# ── Run ───────────────────────────────────────────────────────────────────────
+# ── LIFESTYLE TIPS ─────────────────────────────────────────────────────────────
+@app.route("/tips", methods=["GET"])
+def get_tips():
+    category = request.args.get("category", "")
+    symptoms  = request.args.get("symptoms", "")
+    limit     = int(request.args.get("limit", 5))
+    uid       = request.args.get("uid", "")
+
+    query = {}
+    if category:
+        query["category"] = category
+
+    # Personalisation: if user has symptom history, boost matching tips
+    if uid:
+        user = db.users.find_one({"uid": uid})
+        if user:
+            top_symptoms = sorted(
+                user.get("symptom_scores", {}).items(),
+                key=lambda x: -x[1]
+            )[:3]
+            top_syms = [s[0] for s in top_symptoms if s[1] > 0]
+            if top_syms:
+                # Prefer tips matching user's top symptoms
+                matched = list(db.lifestyle_tips.find(
+                    {**query, "related_symptoms": {"$in": top_syms}},
+                    limit=limit
+                ))
+                if len(matched) >= limit:
+                    return ok([clean(t) for t in matched])
+                # Top up with non-matched
+                matched_ids = [m["_id"] for m in matched]
+                rest = list(db.lifestyle_tips.find(
+                    {**query, "_id": {"$nin": matched_ids}},
+                    limit=limit - len(matched)
+                ))
+                return ok([clean(t) for t in matched + rest])
+
+    # Raw query (no personalisation yet or no symptom history)
+    if symptoms:
+        sym_list = symptoms.split(",")
+        query["related_symptoms"] = {"$in": sym_list}
+
+    tips = list(db.lifestyle_tips.find(query, limit=limit))
+    return ok([clean(t) for t in tips])
+
+
+@app.route("/tips/for-symptom", methods=["GET"])
+def tips_for_symptom():
+    symptom = request.args.get("symptom", "")
+    limit   = int(request.args.get("limit", 3))
+    tips = list(db.lifestyle_tips.find(
+        {"related_symptoms": symptom}, limit=limit
+    ))
+    return ok([clean(t) for t in tips])
+
+
+# ── CLINICS ────────────────────────────────────────────────────────────────────
+@app.route("/clinics", methods=["GET"])
+def get_clinics():
+    tests_param = request.args.get("tests", "")
+    test_list   = [t.strip() for t in tests_param.split(",") if t.strip()]
+    query = {}
+    if test_list:
+        query["tests_available"] = {"$in": test_list}
+    clinics = list(db.clinics_jaipur.find(query))
+    return ok([clean(c) for c in clinics])
+
+
+# ── USERS ──────────────────────────────────────────────────────────────────────
+@app.route("/users/<uid>", methods=["GET"])
+def get_user(uid):
+    user = db.users.find_one({"uid": uid})
+    if not user:
+        return err("User not found", 404)
+    return ok(clean(user))
+
+
+@app.route("/users", methods=["POST"])
+def create_user():
+    body = request.json or {}
+    body["created_at"] = datetime.utcnow().isoformat()
+    body["updated_at"] = datetime.utcnow().isoformat()
+    body.setdefault("symptom_scores", {})
+    body.setdefault("preferred_categories", [])
+    db.users.update_one({"uid": body["uid"]}, {"$setOnInsert": body}, upsert=True)
+    return ok({"message": "User created"})
+
+
+@app.route("/users/<uid>", methods=["PUT"])
+def update_user(uid):
+    body = request.json or {}
+    body["updated_at"] = datetime.utcnow().isoformat()
+    body.pop("_id", None)
+    db.users.update_one({"uid": uid}, {"$set": body})
+    return ok({"message": "Updated"})
+
+
+@app.route("/users/<uid>", methods=["DELETE"])
+def delete_user(uid):
+    db.users.delete_one({"uid": uid})
+    db.symptom_logs.delete_many({"uid": uid})
+    db.reminders.delete_many({"uid": uid})
+    return ok({"message": "Account deleted"})
+
+
+# ── REMINDERS ──────────────────────────────────────────────────────────────────
+@app.route("/reminders", methods=["GET"])
+def get_reminders():
+    uid = request.args.get("uid")
+    reminders = list(db.reminders.find({"uid": uid}))
+    return ok([clean(r) for r in reminders])
+
+
+@app.route("/reminders", methods=["POST"])
+def add_reminder():
+    body = request.json or {}
+    body["created_at"] = datetime.utcnow().isoformat()
+    result = db.reminders.insert_one(body)
+    body["_id"] = str(result.inserted_id)
+    return ok(body)
+
+
+@app.route("/reminders/<rid>", methods=["DELETE"])
+def delete_reminder(rid):
+    db.reminders.delete_one({"_id": ObjectId(rid)})
+    return ok({"message": "Deleted"})
+
+
+@app.route("/reminders/<rid>", methods=["PATCH"])
+def toggle_reminder(rid):
+    body = request.json or {}
+    db.reminders.update_one(
+        {"_id": ObjectId(rid)},
+        {"$set": {"is_active": body.get("is_active", True)}}
+    )
+    return ok({"message": "Updated"})
+
+
 if __name__ == "__main__":
-    print("🚀 Starting Cardiac Symptom API...")
-    print("   http://localhost:5000/symptoms")
-    print("   http://localhost:5000/questions/Chest Pain")
-    print("   POST http://localhost:5000/predict")
+    print("🚀 Cardiac App API running at http://localhost:5000")
     app.run(debug=True, port=5000)
