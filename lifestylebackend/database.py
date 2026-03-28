@@ -17,7 +17,7 @@ db = client["VYTALDB"]
 tips_collection = db["tips"]
 users_collection = db["users"]
 
-# ✅ NEW COLLECTION (as you wanted)
+#  NEW COLLECTION 
 symptom_logs_collection = db["user_symptom_logs"]
 
 
@@ -47,6 +47,14 @@ def update_user_symptom(user_id, symptom):
         upsert=True
     )
 
+
+def get_user_symptom_score(user_id):
+    user = users_collection.find_one({"user_id": user_id})
+
+    if not user or "symptoms" not in user:
+        return {}
+
+    return user["symptoms"]
 
 # -----------------------------
 # GET USER SYMPTOMS
