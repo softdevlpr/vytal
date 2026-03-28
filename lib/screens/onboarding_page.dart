@@ -11,17 +11,17 @@ class OnboardingPage extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          /// 🔥 BACKGROUND IMAGE
+          ///  BACKGROUND IMAGE
           SizedBox(
             width: double.infinity,
             height: double.infinity,
             child: Image.asset(
-              "assets/images/onboarding.jpg",
+              "assets/images/onboarding2.jpg",
               fit: BoxFit.cover,
             ),
           ),
 
-          /// 🔥 DARK OVERLAY
+          ///  DARK OVERLAY
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -61,7 +61,7 @@ class OnboardingPage extends StatelessWidget {
 
                   const Spacer(),
 
-                  /// 🔥 BIG TITLE
+                  ///  BIG TITLE
                   Text(
                     "Stay on top of\nyour health\njourney",
                     style: GoogleFonts.poppins(
@@ -74,7 +74,7 @@ class OnboardingPage extends StatelessWidget {
 
                   const SizedBox(height: 30),
 
-                  /// 🔥 SIGN UP BUTTON (FIXED)
+                  /// SIGN UP BUTTON (FIXED)
                   Container(
                     width: double.infinity,
                     height: 55,
@@ -122,7 +122,7 @@ class OnboardingPage extends StatelessWidget {
 
                   const SizedBox(height: 12),
 
-                  /// 🔥 LOGIN BUTTON (FIXED GLASS)
+                  ///  LOGIN BUTTON (FIXED GLASS)
                   Container(
                     width: double.infinity,
                     height: 55,
