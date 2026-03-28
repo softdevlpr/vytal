@@ -1,16 +1,16 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-import random
 
 from recommendation_engine import recommend_tips
 from database import load_tips
+import random
 
 app = FastAPI()
 
 
 # -----------------------------
-# REQUEST MODEL (IMPORTANT FIX)
+# REQUEST MODEL
 # -----------------------------
 class RecommendRequest(BaseModel):
     user_id: str
@@ -26,47 +26,38 @@ def home():
 
 
 # -----------------------------
-# RECOMMEND ENDPOINT (FIXED)
+# RECOMMEND ENDPOINT
 # -----------------------------
 @app.post("/recommend")
 def get_recommendations(data: RecommendRequest):
 
     try:
-        user_id = data.user_id
-        user_symptoms = data.symptoms or []
-
-        results = recommend_tips(user_id, user_symptoms)
-
-        # safety fallback
-        if not results:
-            return {"recommended_tips": []}
+        results = recommend_tips(
+            data.user_id,
+            data.symptoms or []
+        )
 
         return {"recommended_tips": results}
 
     except Exception as e:
+        print("ERROR:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
 # -----------------------------
-# RANDOM TIPS (TRUE RANDOM FIX)
+# RANDOM TIPS
 # -----------------------------
 @app.get("/random_tips")
 def random_tips():
 
-    try:
-        fresh = load_tips()
+    tips = load_tips()
 
-        if not fresh:
-            return {"tips": []}
+    if not tips:
+        return {"tips": []}
 
-        sample_size = min(10, len(fresh))
-
-        return {
-            "tips": random.sample(fresh, sample_size)
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {
+        "tips": random.sample(tips, min(10, len(tips)))
+    }
 
 
 # -----------------------------
