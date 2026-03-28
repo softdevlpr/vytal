@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import 'register_page.dart';
-import 'reset_password_page.dart'; // ✅ ADD THIS FILE
+import 'reset_password_page.dart'; 
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -27,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
             width: double.infinity,
             height: double.infinity,
             child: Image.asset(
-              "assets/images/onboarding.jpg",
+              "assets/images/onboarding2.jpg",
               fit: BoxFit.cover,
             ),
           ),
