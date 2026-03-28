@@ -16,8 +16,6 @@ db = client["VYTALDB"]
 
 tips_collection = db["tips"]
 users_collection = db["users"]
-
-#  NEW COLLECTION 
 symptom_logs_collection = db["user_symptom_logs"]
 
 
@@ -33,28 +31,32 @@ def load_tips():
 # -----------------------------
 def update_user_symptom(user_id, symptom):
 
-    # 1. store logs separately
-    symptom_logs_collection.insert_one({
-        "user_id": user_id,
-        "symptom": symptom,
-        "timestamp": datetime.utcnow()
-    })
+    if not user_id or not symptom:
+        return
 
-    # 2. update user profile scores
+    # ensure user exists
     users_collection.update_one(
         {"user_id": user_id},
-        {"$inc": {f"symptoms.{symptom}": 1}},
+        {"$setOnInsert": {"symptoms": {}}},
         upsert=True
     )
 
+    # increment symptom score
+    users_collection.update_one(
+        {"user_id": user_id},
+        {"$inc": {f"symptoms.{symptom}": 1}}
+    )
 
-def get_user_symptom_score(user_id):
-    user = users_collection.find_one({"user_id": user_id})
+    # log event (safe)
+    try:
+        symptom_logs_collection.insert_one({
+            "user_id": user_id,
+            "symptom": symptom,
+            "timestamp": datetime.utcnow()
+        })
+    except Exception as e:
+        print("LOG ERROR:", e)
 
-    if not user or "symptoms" not in user:
-        return {}
-
-    return user["symptoms"]
 
 # -----------------------------
 # GET USER SYMPTOMS
@@ -65,4 +67,9 @@ def get_user_symptoms(user_id):
     if not user:
         return {}
 
-    return user.get("symptoms", {})
+    symptoms = user.get("symptoms", {})
+
+    if symptoms is None:
+        return {}
+
+    return {k: int(v) for k, v in symptoms.items()}
