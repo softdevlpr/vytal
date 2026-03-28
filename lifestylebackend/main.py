@@ -5,12 +5,10 @@ import uvicorn
 
 app = FastAPI()
 
-tips = load_tips()
-
 
 @app.get("/")
 def home():
-    return {"message": "Health Tips Recommendation API Running"}
+    return {"message": "API Running"}
 
 
 @app.post("/recommend")
@@ -29,13 +27,8 @@ def get_recommendations(data: dict):
 @app.get("/random_tips")
 def random_tips():
 
-    fresh_tips = load_tips()
-
-    sample_size = min(10, len(fresh_tips))
-
-    return {
-        "tips": fresh_tips[:sample_size]
-    }
+    fresh = load_tips()
+    return {"tips": fresh[:10]}
 
 
 if __name__ == "__main__":
