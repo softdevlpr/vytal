@@ -300,7 +300,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: Text(
-                _step == 6 ? 'Get My Results' : 'Next',
+                _step == 6 ? 'Get Tests' : 'Next',
                 style: GoogleFonts.poppins(
                     color: AppColors.white,
                     fontSize: 16,
