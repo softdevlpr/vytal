@@ -1,11 +1,10 @@
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
+from datetime import datetime
 
-# Load environment variables
 load_dotenv()
 
-# Get URI from .env
 MONGO_URI = os.getenv("MONGO_URI")
 
 if not MONGO_URI:
@@ -18,6 +17,9 @@ db = client["VYTALDB"]
 tips_collection = db["tips"]
 users_collection = db["users"]
 
+# ✅ NEW COLLECTION (as you wanted)
+symptom_logs_collection = db["user_symptom_logs"]
+
 
 # -----------------------------
 # LOAD TIPS
@@ -27,9 +29,18 @@ def load_tips():
 
 
 # -----------------------------
-# UPDATE SYMPTOM SCORE
+# UPDATE SYMPTOM SCORE + LOGGING
 # -----------------------------
 def update_user_symptom(user_id, symptom):
+
+    # 1. store logs separately
+    symptom_logs_collection.insert_one({
+        "user_id": user_id,
+        "symptom": symptom,
+        "timestamp": datetime.utcnow()
+    })
+
+    # 2. update user profile scores
     users_collection.update_one(
         {"user_id": user_id},
         {"$inc": {f"symptoms.{symptom}": 1}},
