@@ -55,8 +55,6 @@ class _LifestylePageState extends State<LifestylePage> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final prefs = await SharedPreferences.getInstance();
-
       final Map<String, dynamic> scoreMap =
         jsonDecode(prefs.getString("symptom_scores") ?? "{}");
 
