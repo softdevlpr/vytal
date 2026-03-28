@@ -60,7 +60,7 @@ class BottomNavController extends StatefulWidget {
 class _BottomNavControllerState extends State<BottomNavController> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [HomePage(), PlanPage(), InsightsPage()];
+  final List<Widget> _pages = [HomePage(), LifestylePage(), InsightsPage()];
 
   @override
   Widget build(BuildContext context) {
