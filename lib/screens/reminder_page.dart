@@ -253,11 +253,7 @@ class _ReminderPageState extends State<ReminderPage> {
 
   Future<void> _saveReminder() async {
     // Validate: title + time always required; date required for one-time
-      final AndroidFlutterLocalNotificationsPlugin? androidImpl =
-      flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation
-              AndroidFlutterLocalNotificationsPlugin>();
-  await androidImpl?.requestNotificationsPermission();
+     await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
     
     if (_titleController.text.trim().isEmpty || _selectedTime == null) return;
     if (!_isRecurring && _selectedDate == null) return;
