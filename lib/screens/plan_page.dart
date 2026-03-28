@@ -55,8 +55,18 @@ class _LifestylePageState extends State<LifestylePage> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      List<String> storedSymptoms =
-          prefs.getStringList("symptoms_history") ?? [];
+      final prefs = await SharedPreferences.getInstance();
+
+      final Map<String, dynamic> scoreMap =
+        jsonDecode(prefs.getString("symptom_scores") ?? "{}");
+
+      String latestSymptom = "";
+
+      if (scoreMap.isNotEmpty) {
+        latestSymptom = scoreMap.entries
+          .reduce((a, b) => a.value > b.value ? a : b)
+          .key;
+}
 
       String userId = await getUserId();
 
@@ -65,7 +75,7 @@ class _LifestylePageState extends State<LifestylePage> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "user_id": userId,
-          "symptoms": storedSymptoms,
+          "symptoms": latestSymptom.isNotEmpty ? [latestSymptom] : [],
         }),
       );
 
