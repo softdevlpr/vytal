@@ -27,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
             width: double.infinity,
             height: double.infinity,
             child: Image.asset(
-              "assets/images/onboarding.jpg",
+              "assets/images/onboarding2.jpg",
               fit: BoxFit.cover,
             ),
           ),
