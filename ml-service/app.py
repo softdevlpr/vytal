@@ -303,5 +303,5 @@ def toggle_reminder(rid):
 
 
 if __name__ == "__main__":
-    print("🚀 Cardiac App API running at http://localhost:5000")
-    app.run(debug=True, port=5000)
+    print("Vytal App API running at http://localhost:8000")
+    app.run(host="0.0.0.0", port=8000, debug=True)
