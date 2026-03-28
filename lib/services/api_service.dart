@@ -6,8 +6,8 @@ import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
 class ApiService {
-  // Change this to your deployed backend URL in production
-  static const String baseUrl = 'http://localhost:5000';
+  // deployed backend URL in production
+  static const String baseUrl = 'http://10.0.2.2:8000';
 
   static final _headers = {'Content-Type': 'application/json'};
 
