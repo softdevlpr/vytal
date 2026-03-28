@@ -17,7 +17,15 @@ class CategoryTipsPage extends StatelessWidget {
 
       appBar: AppBar(
         backgroundColor: const Color(0xFF0F011E),
-        title: Text(category),
+        elevation: 0,
+        title: Text(
+          category,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
       ),
 
       body: _buildBody(),
@@ -25,7 +33,6 @@ class CategoryTipsPage extends StatelessWidget {
   }
 
   Widget _buildBody() {
-    // ✅ CLEAN + FILTER INVALID TIPS (IMPORTANT FIX)
     final cleanTips = tips.where((tip) {
       if (tip == null) return false;
 
@@ -40,12 +47,21 @@ class CategoryTipsPage extends StatelessWidget {
       return tip.toString().trim().isNotEmpty;
     }).toList();
 
-    // 🚨 SAFE CHECK
     if (cleanTips.isEmpty) {
       return const Center(
-        child: Text(
-          "No tips available",
-          style: TextStyle(color: Colors.white, fontSize: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.info_outline, color: Colors.white54, size: 50),
+            SizedBox(height: 10),
+            Text(
+              "No tips available",
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -66,25 +82,61 @@ class CategoryTipsPage extends StatelessWidget {
           tipText = tip.toString();
         }
 
-        // 🚨 FINAL SAFETY CHECK (prevents blank boxes)
         if (tipText.trim().isEmpty) {
           return const SizedBox.shrink();
         }
 
         return Container(
-          width: double.infinity,
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(18),
+          margin: const EdgeInsets.only(bottom: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E1E2C),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF1E1E2C),
+                Color(0xFF2A2A3D),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: Text(
-            tipText,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              height: 1.5,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.lightbulb_outline,
+                    color: Colors.amber,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Text(
+                    tipText,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      height: 1.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
