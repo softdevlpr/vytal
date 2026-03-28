@@ -26,7 +26,6 @@ EXCEL_FILE = "symptom_v5.xlsx"
 # -----------------------------
 client = MongoClient(MONGO_URI)
 
-# 🔥 TEST CONNECTION (VERY IMPORTANT)
 try:
     client.admin.command('ping')
     print("✅ Connected to MongoDB")
@@ -44,6 +43,11 @@ if not os.path.exists(EXCEL_FILE):
     raise Exception(f"❌ Excel file not found: {EXCEL_FILE}")
 
 df = pd.read_excel(EXCEL_FILE)
+
+# 🔥 CLEAN COLUMN NAMES (handles extra spaces)
+df.columns = df.columns.str.strip()
+
+print("📊 Columns detected:", df.columns.tolist())
 
 # -----------------------------
 # CLEAN OLD DATA (OPTIONAL)
@@ -67,19 +71,20 @@ def build_answers(row):
 def build_tests(row):
     tests = []
 
-    if pd.notna(row.get("Test1_Name")):
-        tests.append({
-            "rank": 1,
-            "name": str(row["Test1_Name"]),
-            "description": str(row["Test1_Description"])
-        })
+    for i in range(1, 7):
+        test_name_col = f"Recommend Test {i}"
+        test_desc_col = f"Test {i} Description"
 
-    if pd.notna(row.get("Test2_Name")):
-        tests.append({
-            "rank": 2,
-            "name": str(row["Test2_Name"]),
-            "description": str(row["Test2_Description"])
-        })
+        test_name = row.get(test_name_col)
+        test_desc = row.get(test_desc_col)
+
+        # ✅ skip if test name is empty or NaN
+        if pd.notna(test_name) and str(test_name).strip() != "":
+            tests.append({
+                "rank": i,
+                "name": str(test_name).strip(),
+                "description": str(test_desc).strip() if pd.notna(test_desc) else ""
+            })
 
     return tests
 
@@ -90,7 +95,7 @@ documents = []
 
 for _, row in df.iterrows():
     doc = {
-        "primary_symptom": str(row["Symptom"]).strip(),
+        "primary_symptom": str(row["Primary Symptom"]).strip(),
         "answers": build_answers(row),
         "urgency": str(row["Urgency"]).strip(),
         "recommended_tests": build_tests(row),
