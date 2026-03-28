@@ -12,75 +12,105 @@ CATEGORIES = [
 
 def recommend_tips(user_id, user_symptoms):
 
+    print("\n==============================")
+    print("🔥 REQUEST RECEIVED")
+    print("USER ID:", user_id)
+    print("INPUT SYMPTOMS:", user_symptoms)
+    print("==============================\n")
+
     tips = load_tips()
 
+    print("📦 TOTAL TIPS LOADED:", len(tips))
+
     # -----------------------------
-    # STEP 1: update symptom scores
+    # STEP 1: update symptoms (if any)
     # -----------------------------
-    if user_symptoms:
+    if user_symptoms and len(user_symptoms) > 0:
         for symptom in user_symptoms:
             update_user_symptom(user_id, symptom)
 
     # -----------------------------
-    # STEP 2: load updated user profile
+    # STEP 2: fetch user profile
     # -----------------------------
     user_data = get_user_symptoms(user_id)
 
-    scored_tips = []
+    print("👤 USER PROFILE FROM DB:", user_data)
 
-    # -----------------------------
-    # STEP 3: scoring
-    # -----------------------------
-    for tip in tips:
-        score = 0
-        tip_symptoms = tip.get("symptoms", [])
+    has_history = any(user_data.values())
 
-        for symptom in tip_symptoms:
-            score += user_data.get(symptom, 0)
+    print("📊 HAS HISTORY:", has_history)
 
-        scored_tips.append({
-            "tip": tip,
-            "score": score
-        })
-
-    # sort
-    scored_tips.sort(key=lambda x: x["score"], reverse=True)
-
-    # -----------------------------
-    # STEP 4: group by category
-    # -----------------------------
     grouped = {cat: [] for cat in CATEGORIES}
 
-    for item in scored_tips:
-        tip = item["tip"]
-        category = tip.get("category")
-
-        if category in grouped:
-            grouped[category].append(tip)
-
-    # limit top 5
-    for category in grouped:
-        grouped[category] = grouped[category][:5]
-
     # -----------------------------
-    # STEP 5: fallback (IMPORTANT FIX)
+    # CASE 1: NO HISTORY → RANDOM MODE
     # -----------------------------
-    for category in CATEGORIES:
-        if len(grouped[category]) == 0:
-            category_tips = [t for t in tips if t.get("category") == category]
+    if not has_history:
+
+        print("🎲 MODE: RANDOM TIPS")
+
+        for category in CATEGORIES:
+
+            category_tips = [
+                t for t in tips
+                if t.get("category") == category
+            ]
+
+            print(f"\n➡️ Category: {category}")
+            print("Available tips:", len(category_tips))
 
             if category_tips:
-                grouped[category] = random.sample(
-                    category_tips,
-                    min(3, len(category_tips))
-                )
+
+                # 🔥 RANDOM COUNT (BETWEEN 1 and 5 or available size)
+                k = random.randint(1, min(5, len(category_tips)))
+
+                print("Random count selected:", k)
+
+                grouped[category] = random.sample(category_tips, k)
 
     # -----------------------------
-    # STEP 6: FINAL FORMAT (FLUTTER FRIENDLY FIX)
+    # CASE 2: PERSONALIZED MODE
+    # -----------------------------
+    else:
+
+        print("🧠 MODE: PERSONALIZED")
+
+        scored = []
+
+        for tip in tips:
+            score = 0
+            tip_symptoms = tip.get("symptoms", [])
+
+            for symptom in tip_symptoms:
+                score += user_data.get(symptom, 0)
+
+            scored.append({
+                "tip": tip,
+                "score": score
+            })
+
+        scored.sort(key=lambda x: x["score"], reverse=True)
+
+        for item in scored:
+            tip = item["tip"]
+            category = tip.get("category")
+
+            if category in grouped:
+                grouped[category].append(tip)
+
+        for category in grouped:
+            grouped[category] = grouped[category][:5]
+
+    # -----------------------------
+    # FINAL OUTPUT
     # -----------------------------
     result = []
 
     for category in CATEGORIES:
+
+        print(f"\n📤 FINAL CATEGORY: {category}")
+        print("Tips count:", len(grouped[category]))
+
         result.append({
             "category": category,
             "tips": [
@@ -92,5 +122,7 @@ def recommend_tips(user_id, user_symptoms):
                 for t in grouped[category]
             ]
         })
+
+    print("\n✅ FINAL RESPONSE SENT\n")
 
     return result
