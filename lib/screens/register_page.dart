@@ -23,17 +23,17 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       body: Stack(
         children: [
-          /// 🔥 BACKGROUND IMAGE (SAME AS ONBOARDING)
+          ///  BACKGROUND IMAGE (SAME AS ONBOARDING)
           SizedBox(
             width: double.infinity,
             height: double.infinity,
             child: Image.asset(
-              "assets/images/onboarding.jpg",
+              "assets/images/onboarding2.jpg",
               fit: BoxFit.cover,
             ),
           ),
 
-          /// 🔥 DARK OVERLAY
+          /// DARK OVERLAY
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -48,7 +48,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
 
-          /// 🔥 CONTENT
+          /// CONTENT
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -56,7 +56,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: [
                   const SizedBox(height: 40),
 
-                  /// 🔥 TITLE
+                  ///  TITLE
                   Text(
                     "Create Account",
                     style: GoogleFonts.poppins(
@@ -78,7 +78,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 40),
 
-                  /// 🔥 INPUTS
+                  ///  INPUTS
                   _inputField(
                     controller: nameController,
                     hint: "Full Name",
@@ -96,7 +96,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 16),
 
-                  /// 🔥 GENDER DROPDOWN
+                  ///  GENDER DROPDOWN
                   DropdownButtonFormField<String>(
                     dropdownColor: const Color(0xFF1E1E2C),
                     value: selectedGender,
@@ -147,7 +147,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 30),
 
-                  /// 🔥 REGISTER BUTTON
+                  ///  REGISTER BUTTON
                   Container(
                     width: double.infinity,
                     height: 55,
@@ -187,7 +187,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 20),
 
-                  /// 🔥 LOGIN LINK
+                  ///  LOGIN LINK
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -225,7 +225,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// 🔥 REGISTER LOGIC
+  /// REGISTER LOGIC
   void _register() {
     if (nameController.text.isEmpty ||
         ageController.text.isEmpty ||
@@ -248,7 +248,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// 🔥 INPUT FIELD
+  ///  INPUT FIELD
   Widget _inputField({
     required TextEditingController controller,
     required String hint,
