@@ -23,7 +23,7 @@ class _LifestylePageState extends State<LifestylePage> {
     "Energy and Productivity"
   ];
 
-  Map<String, List<String>> categorizedTips = {};
+  List<dynamic> backendCategories = [];
   bool isLoading = true;
 
   @override
@@ -33,12 +33,11 @@ class _LifestylePageState extends State<LifestylePage> {
   }
 
   // -----------------------------
-  // GET USER ID (IMPORTANT FIX)
+  // USER ID
   // -----------------------------
   Future<String> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // If not exists, create one
     String? userId = prefs.getString("user_id");
 
     if (userId == null) {
@@ -70,30 +69,13 @@ class _LifestylePageState extends State<LifestylePage> {
         }),
       );
 
-      Map<String, List<String>> grouped = {
-        for (var c in categories) c: []
-      };
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        List tips = data["recommended_tips"] ?? [];
-
-        for (var block in tips) {
-          String category = block["category"] ?? "";
-          List tipsList = block["tips"] ?? [];
-
-          if (grouped.containsKey(category)) {
-            grouped[category] = tipsList
-                .map<String>((t) => t["text"] ?? "")
-                .where((t) => t.isNotEmpty)
-                .toList();
-          }
-        }
+        backendCategories = data["recommended_tips"] ?? [];
       }
 
       setState(() {
-        categorizedTips = grouped;
         isLoading = false;
       });
     } catch (e) {
@@ -124,11 +106,17 @@ class _LifestylePageState extends State<LifestylePage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: fetchTips, // pull to refresh fixes stale tips issue
+              onRefresh: fetchTips,
               child: ListView(
                 padding: const EdgeInsets.all(16),
-                children: categories.map((category) {
-                  final tips = categorizedTips[category] ?? [];
+                children: categories.map((categoryName) {
+                  final categoryData = backendCategories.firstWhere(
+                    (c) => c["category"] == categoryName,
+                    orElse: () => null,
+                  );
+
+                  final List tips =
+                      categoryData != null ? categoryData["tips"] : [];
 
                   return GestureDetector(
                     onTap: () {
@@ -136,7 +124,7 @@ class _LifestylePageState extends State<LifestylePage> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => CategoryTipsPage(
-                            category: category,
+                            category: categoryName,
                             tips: tips,
                           ),
                         ),
@@ -151,13 +139,15 @@ class _LifestylePageState extends State<LifestylePage> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.lightbulb_outline,
-                              color: Colors.white),
+                          const Icon(
+                            Icons.lightbulb_outline,
+                            color: Colors.white,
+                          ),
                           const SizedBox(width: 12),
 
                           Expanded(
                             child: Text(
-                              category,
+                              categoryName,
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -165,6 +155,13 @@ class _LifestylePageState extends State<LifestylePage> {
                               ),
                             ),
                           ),
+
+                          Text(
+                            "${tips.length}",
+                            style: const TextStyle(color: Colors.white54),
+                          ),
+
+                          const SizedBox(width: 8),
 
                           const Icon(
                             Icons.arrow_forward_ios,
