@@ -37,6 +37,9 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
         .join(" ");
   }
 
+  // -----------------------------
+  // FIXED: SCORE STORAGE (UNCHANGED LOGIC + SAFE)
+  // -----------------------------
   Future<void> saveSymptomScore() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -48,10 +51,27 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
       scores = Map<String, int>.from(jsonDecode(stored));
     }
 
-    //  ONLY increase here (Next button click)
     scores[selectedSymptom!] = (scores[selectedSymptom!] ?? 0) + 1;
 
     await prefs.setString("symptom_scores", jsonEncode(scores));
+  }
+
+  // -----------------------------
+  // FIX ADDED: CLEAN SYMPTOM HISTORY (IMPORTANT FIX)
+  // -----------------------------
+  Future<void> saveSymptomHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Get existing list safely
+    List<String> history = prefs.getStringList("symptoms_history") ?? [];
+
+    // ADD ONLY CURRENT SYMPTOM (NO DUPLICATES)
+    history.add(selectedSymptom!);
+
+    // KEEP ONLY UNIQUE VALUES
+    history = history.toSet().toList();
+
+    await prefs.setStringList("symptoms_history", history);
   }
 
   @override
@@ -103,8 +123,12 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                 onPressed: selectedSymptom == null
                     ? null
                     : () async {
-                        //  score increases ONLY here
+
+                        // 1. save score (your existing logic)
                         await saveSymptomScore();
+
+                        // 2. FIX: save clean history (NEW IMPORTANT FIX)
+                        await saveSymptomHistory();
 
                         Navigator.push(
                           context,
