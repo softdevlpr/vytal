@@ -1,25 +1,48 @@
 import pandas as pd
+import os
+from dotenv import load_dotenv
 from pymongo import MongoClient
 from datetime import datetime
 
 # -----------------------------
+# LOAD ENV VARIABLES
+# -----------------------------
+load_dotenv()
+
+MONGO_URI = os.getenv("MONGO_URI")
+
+if not MONGO_URI:
+    raise Exception("❌ MONGO_URI not found in .env file")
+
+# -----------------------------
 # CONFIG
 # -----------------------------
-MONGO_URI = MongoClient("mongodb+srv://username:password@cluster.mongodb.net/")
 DB_NAME = "VYTALDB"
 COLLECTION_NAME = "symptom_dataset"
-EXCEL_FILE = "symptom_v5.xlsx"   # make sure file is in same folder
+EXCEL_FILE = "symptom_v5.xlsx"
 
 # -----------------------------
 # CONNECT TO MONGODB
 # -----------------------------
 client = MongoClient(MONGO_URI)
+
+# 🔥 TEST CONNECTION (VERY IMPORTANT)
+try:
+    client.admin.command('ping')
+    print("✅ Connected to MongoDB")
+except Exception as e:
+    print("❌ MongoDB connection failed:", e)
+    exit()
+
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
 # -----------------------------
 # LOAD EXCEL
 # -----------------------------
+if not os.path.exists(EXCEL_FILE):
+    raise Exception(f"❌ Excel file not found: {EXCEL_FILE}")
+
 df = pd.read_excel(EXCEL_FILE)
 
 # -----------------------------
@@ -70,12 +93,13 @@ for _, row in df.iterrows():
         "primary_symptom": str(row["Symptom"]).strip(),
         "answers": build_answers(row),
         "urgency": str(row["Urgency"]).strip(),
-        "recommended_tests": build_tests(row)
+        "recommended_tests": build_tests(row),
+        "created_at": datetime.utcnow()
     }
 
     documents.append(doc)
 
-# Bulk insert (FAST)
+# Bulk insert
 if documents:
     collection.insert_many(documents)
 
