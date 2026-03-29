@@ -1,4 +1,4 @@
-name: cardiac_app
+name: vytal_app
 description: Cardiac Symptom Self-Diagnosis & Lifestyle App
 publish_to: 'none'
 version: 1.0.0+1
