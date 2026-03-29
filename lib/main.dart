@@ -11,10 +11,10 @@ import 'data/app_constants.dart';
 import 'services/notification_service.dart';
 import 'services/auth_service.dart';
 import 'providers/user_provider.dart';
-import 'pages/splash_page.dart';
-import 'pages/login_page.dart';
-import 'pages/signup_page.dart';
-import 'pages/home_page.dart';
+import 'screens/splash_page.dart';
+import 'screens/login_page.dart';
+import 'screens/signup_page.dart';
+import 'screens/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
