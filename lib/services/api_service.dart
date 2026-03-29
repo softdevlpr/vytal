@@ -6,9 +6,7 @@ class ApiService {
   static const String mlBaseUrl = 'http://10.0.2.2:8000';
   static const String dbBaseUrl = 'http://10.0.2.2:3000';
 
-  static const Map<String, String> _headers = {
-    'Content-Type': 'application/json',
-  };
+  static const _headers = {'Content-Type': 'application/json'};
 
   // ─────────────────────────────────────────
   // ML PREDICTION
@@ -44,10 +42,7 @@ class ApiService {
   // ─────────────────────────────────────────
   static Future<UserModel?> getUser(String uid) async {
     try {
-      final res = await http.get(
-        Uri.parse('$dbBaseUrl/users/$uid'),
-      );
-
+      final res = await http.get(Uri.parse('$dbBaseUrl/users/$uid'));
       final data = jsonDecode(res.body);
 
       if (res.statusCode == 200 && data['success'] == true) {
@@ -157,10 +152,9 @@ class ApiService {
   }
 
   // ─────────────────────────────────────────
-  // TIPS 
+  // TIPS (SINGLE SYMPTOM)
   // ─────────────────────────────────────────
-  static Future<List<LifestyleTip>> getTipsForSymptom(
-      String symptom) async {
+  static Future<List<LifestyleTip>> getTipsForSymptom(String symptom) async {
     try {
       final res = await http.get(
         Uri.parse(
@@ -177,6 +171,57 @@ class ApiService {
       }
     } catch (e) {
       print('[ERROR] getTipsForSymptom: $e');
+    }
+
+    return [];
+  }
+
+  // ─────────────────────────────────────────
+  // TIPS (MULTIPLE SYMPTOMS) ✅ FIXED
+  // ─────────────────────────────────────────
+  static Future<List<LifestyleTip>> getTips({
+    required List<String> symptoms,
+  }) async {
+    try {
+      final query = symptoms.map((s) => 'symptoms=$s').join('&');
+
+      final res = await http.get(
+        Uri.parse('$dbBaseUrl/tips?$query'),
+      );
+
+      final data = jsonDecode(res.body);
+
+      if (res.statusCode == 200 && data['success'] == true) {
+        return (data['data'] as List)
+            .map((t) => LifestyleTip.fromMap(t))
+            .toList();
+      }
+    } catch (e) {
+      print('[ERROR] getTips: $e');
+    }
+
+    return [];
+  }
+
+  // ─────────────────────────────────────────
+  // CLINICS ✅ FIXED
+  // ─────────────────────────────────────────
+  static Future<List<Map<String, dynamic>>> getClinicsForTests(
+      List<String> tests) async {
+    try {
+      final query = tests.map((t) => 'tests=$t').join('&');
+
+      final res = await http.get(
+        Uri.parse('$dbBaseUrl/clinics?$query'),
+      );
+
+      final data = jsonDecode(res.body);
+
+      if (res.statusCode == 200 && data['success'] == true) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      }
+    } catch (e) {
+      print('[ERROR] getClinicsForTests: $e');
     }
 
     return [];
