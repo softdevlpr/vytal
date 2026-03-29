@@ -1,3 +1,5 @@
+// lib/pages/add_symptoms_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/app_constants.dart';
@@ -25,11 +27,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
           : [];
 
   Map<String, dynamic>? get _currentQuestion =>
-      (_selectedSymptom != null &&
-              _step > 0 &&
-              _step <= _questions.length)
-          ? _questions[_step - 1]
-          : null;
+      _step >= 1 && _step <= 6 ? _questions[_step - 1] : null;
 
   void _selectSymptom(String symptom) {
     setState(() {
@@ -37,19 +35,21 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
       _step = 1;
       _answers.clear();
     });
+
+    print('[DEBUG] Selected symptom: $symptom');
   }
 
   void _answerQuestion(int value) {
-    final q = _currentQuestion;
-    if (q == null) return;
-
+    final q = _currentQuestion!;
     setState(() {
       _answers[q['id']] = value;
     });
+
+    print('[DEBUG] Answered ${q['id']} = $value');
   }
 
   void _next() {
-    if (_step < _questions.length) {
+    if (_step < 6) {
       setState(() => _step++);
     } else {
       _submit();
@@ -69,22 +69,25 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
   }
 
   Future<void> _submit() async {
-    if (_selectedSymptom == null) return;
-
     setState(() => _loading = true);
 
     try {
+      print('[DEBUG] Submitting symptom flow...');
+      print('[DEBUG] Answers: $_answers');
+
       final result = await ApiService.predict(
         symptom: _selectedSymptom!,
         answers: _answers,
       );
+
+      print('[DEBUG] ML Result: $result');
 
       final tests = (result['recommended_tests'] as List)
           .map((t) => RecommendedTest.fromMap(t))
           .toList();
 
       final log = SymptomLog(
-        uid: 'local_user',
+        uid: 'local_user', // Firebase removed
         primarySymptom: _selectedSymptom!,
         answers: _answers,
         urgency: result['urgency'],
@@ -101,11 +104,23 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => TestResultPage(log: log)),
+        MaterialPageRoute(
+          builder: (_) => TestResultPage(log: log),
+        ),
       );
     } catch (e) {
+      print('[ERROR] Submit failed: $e');
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to process symptoms")),
+        SnackBar(
+          content: Text(
+            'Failed to process symptoms',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: AppColors.urgentRed,
+        ),
       );
     } finally {
       setState(() => _loading = false);
@@ -124,7 +139,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
           onPressed: _step == 0 ? () => Navigator.pop(context) : _back,
         ),
         title: Text(
-          _step == 0 ? 'Select Symptom' : (_selectedSymptom ?? ''),
+          _step == 0 ? 'Select Symptom' : _selectedSymptom ?? '',
           style: GoogleFonts.poppins(color: AppColors.white),
         ),
       ),
@@ -136,106 +151,33 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
     );
   }
 
-  // FIXED SYMPTOM GRID (icons restored)
   Widget _symptomPicker() {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: kSymptoms.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 1.2,
       ),
-      itemBuilder: (_, i) {
-        final symptom = kSymptoms[i];
-
-        return GestureDetector(
-          onTap: () => _selectSymptom(symptom),
-          child: Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.health_and_safety,
-                        size: 40, color: Colors.redAccent),
-                    const SizedBox(height: 10),
-                    Text(
-                      symptom,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+      itemBuilder: (_, i) => GestureDetector(
+        onTap: () => _selectSymptom(kSymptoms[i]),
+        child: Card(child: Center(child: Text(kSymptoms[i]))),
+      ),
     );
   }
 
-  //  FIXED QUESTION UI (YES/NO buttons restored)
   Widget _questionFlow() {
-    final q = _currentQuestion;
-
-    if (q == null) {
-      return const Center(child: Text("No questions found"));
-    }
-
+    final q = _currentQuestion!;
     final currentAnswer = _answers[q['id']];
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            q['text'],
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+    return Column(
+      children: [
+        Text(q['text']),
 
-          const SizedBox(height: 30),
-
-          //  YES / NO BUTTONS
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
-                  onPressed: () => _answerQuestion(1),
-                  child: const Text("YES"),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                  onPressed: () => _answerQuestion(0),
-                  child: const Text("NO"),
-                ),
-              ),
-            ],
-          ),
-
-          const Spacer(),
-
-          ElevatedButton(
-            onPressed: currentAnswer != null ? _next : null,
-            child: Text(_step == _questions.length ? 'Get Tests' : 'Next'),
-          ),
-        ],
-      ),
+        ElevatedButton(
+          onPressed: currentAnswer != null ? _next : null,
+          child: Text(_step == 6 ? 'Get Tests' : 'Next'),
+        ),
+      ],
     );
   }
 }
