@@ -11,7 +11,7 @@ import 'data/app_constants.dart';
 import 'services/notification_service.dart';
 import 'services/auth_service.dart';
 import 'providers/user_provider.dart';
-import 'screens/splash_page.dart';
+import 'screens/onboarding_page.dart';
 import 'screens/login_page.dart';
 import 'screens/signup_page.dart';
 import 'screens/home_page.dart';
@@ -34,7 +34,7 @@ class CardiacApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
       child: MaterialApp(
-        title: 'Cardiac Care',
+        title: 'Vytal App - Your Health Matters',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           scaffoldBackgroundColor: AppColors.background,
@@ -52,9 +52,9 @@ class CardiacApp extends StatelessWidget {
             },
           ),
         ),
-        initialRoute: '/splash',
+        initialRoute: '/onboarding',
         routes: {
-          '/splash':  (_) => const SplashPage(),
+          '/splash':  (_) => const OnboardingPage(),
           '/login':   (_) => const LoginPage(),
           '/signup':  (_) => const SignupPage(),
           '/home':    (_) => const HomePage(),
