@@ -13,7 +13,7 @@ import 'services/auth_service.dart';
 import 'providers/user_provider.dart';
 import 'screens/onboarding_page.dart';
 import 'screens/login_page.dart';
-import 'screens/signup_page.dart';
+import 'screens/register_page.dart';
 import 'screens/home_page.dart';
 
 void main() async {
@@ -56,7 +56,7 @@ class CardiacApp extends StatelessWidget {
         routes: {
           '/splash':  (_) => const OnboardingPage(),
           '/login':   (_) => const LoginPage(),
-          '/signup':  (_) => const SignupPage(),
+          '/signup':  (_) => const RegisterPage(),
           '/home':    (_) => const HomePage(),
         },
       ),
