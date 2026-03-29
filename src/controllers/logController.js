@@ -31,7 +31,7 @@ const addLog = async (req, res) => {
     body.logged_at = new Date().toISOString();
     await db.collection("symptom_logs").insertOne(body);
 
-    // 🔥 UPDATE SCORE (FIXED)
+    
     await db.collection("users").updateOne(
       { uid },
       {
@@ -39,7 +39,7 @@ const addLog = async (req, res) => {
           [`symptom_scores.${primary_symptom}`]: 1,
         },
       },
-      { upsert: true } // ✅ IMPORTANT FIX
+      { upsert: true }
     );
 
     res.json({
