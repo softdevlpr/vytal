@@ -2,27 +2,42 @@
 const axios = require("axios");
 
 // POST /api/predict
-// Forwards the request to the Python ML microservice on port 8000
+// Forwards request to Flask ML service (port 5000)
 const predict = async (req, res) => {
-  const { primary_symptom: symptom = "", answers = {} } = req.body || {};
+  const { answers = {} } = req.body || {};
 
-  if (!symptom || Object.keys(answers).length < 6) {
+  // Validate input
+  if (Object.keys(answers).length < 6) {
     return res.status(400).json({
       success: false,
-      error: "primary_symptom and 6 answers required",
+      error: "6 answers required",
     });
   }
 
   try {
+    console.log("Sending to ML:", answers);
+
+    // Call Flask API
     const response = await axios.post(
-      "http://localhost:8000/ml-predict",   // Python microservice
-      { primary_symptom: symptom, answers }
+      "http://127.0.0.1:5000/predict",
+      { answers }
     );
-    res.json({ success: true, data: response.data.data });
+
+    console.log("ML Response:", response.data);
+
+    // Send back to client
+    res.json({
+      success: true,
+      data: response.data,
+    });
   } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
+    console.error("ML ERROR:", e.response?.data || e.message);
+
+    res.status(500).json({
+      success: false,
+      error: e.response?.data || e.message,
+    });
   }
 };
 
 module.exports = { predict };
-
