@@ -3,10 +3,29 @@ import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
 class ApiService {
+  // ─────────────────────────────────────────
+  // BASE URLS
+  // ─────────────────────────────────────────
   static const String mlBaseUrl = 'http://10.0.2.2:8000';
   static const String dbBaseUrl = 'http://10.0.2.2:3000';
 
   static const _headers = {'Content-Type': 'application/json'};
+
+  // ─────────────────────────────────────────
+  // HELPERS
+  // ─────────────────────────────────────────
+  static void _log(String tag, dynamic message) {
+    print('[$tag] $message');
+  }
+
+  static Map<String, dynamic> _safeDecode(String body) {
+    try {
+      return jsonDecode(body);
+    } catch (e) {
+      _log('JSON_ERROR', body);
+      throw Exception('Invalid JSON response');
+    }
+  }
 
   // ─────────────────────────────────────────
   // ML PREDICTION
@@ -22,13 +41,18 @@ class ApiService {
       'answers': answers,
     };
 
+    _log('ML_REQUEST', payload);
+
     final res = await http.post(
       url,
       headers: _headers,
       body: jsonEncode(payload),
     );
 
-    final data = jsonDecode(res.body);
+    _log('ML_STATUS', res.statusCode);
+    _log('ML_RESPONSE', res.body);
+
+    final data = _safeDecode(res.body);
 
     if (res.statusCode == 200 && data['success'] == true) {
       return data['data'];
@@ -38,18 +62,21 @@ class ApiService {
   }
 
   // ─────────────────────────────────────────
-  // USER API
+  // USER APIs
   // ─────────────────────────────────────────
   static Future<UserModel?> getUser(String uid) async {
     try {
       final res = await http.get(Uri.parse('$dbBaseUrl/users/$uid'));
-      final data = jsonDecode(res.body);
+
+      _log('GET_USER', res.body);
+
+      final data = _safeDecode(res.body);
 
       if (res.statusCode == 200 && data['success'] == true) {
         return UserModel.fromMap(data['data']);
       }
     } catch (e) {
-      print('[ERROR] getUser: $e');
+      _log('ERROR_GET_USER', e);
     }
     return null;
   }
@@ -62,11 +89,13 @@ class ApiService {
         body: jsonEncode(user.toMap()),
       );
 
+      _log('UPDATE_USER', res.body);
+
       if (res.statusCode != 200) {
         throw Exception('Failed to update user');
       }
     } catch (e) {
-      print('[ERROR] updateUser: $e');
+      _log('ERROR_UPDATE_USER', e);
     }
   }
 
@@ -76,11 +105,13 @@ class ApiService {
         Uri.parse('$dbBaseUrl/users/$uid'),
       );
 
+      _log('DELETE_USER', res.body);
+
       if (res.statusCode != 200) {
         throw Exception('Failed to delete user');
       }
     } catch (e) {
-      print('[ERROR] deleteUser: $e');
+      _log('ERROR_DELETE_USER', e);
     }
   }
 
@@ -95,11 +126,13 @@ class ApiService {
         body: jsonEncode(log.toMap()),
       );
 
+      _log('SAVE_LOG', res.body);
+
       if (res.statusCode != 200 && res.statusCode != 201) {
         throw Exception('Failed to save log');
       }
     } catch (e) {
-      print('[ERROR] saveSymptomLog: $e');
+      _log('ERROR_SAVE_LOG', e);
     }
   }
 
@@ -108,12 +141,16 @@ class ApiService {
     String? period,
   }) async {
     try {
-      final query = 'uid=$uid${period != null ? '&period=$period' : ''}';
+      final query =
+          'uid=$uid${period != null ? '&period=$period' : ''}';
+
       final res = await http.get(
         Uri.parse('$dbBaseUrl/logs?$query'),
       );
 
-      final data = jsonDecode(res.body);
+      _log('GET_LOGS', res.body);
+
+      final data = _safeDecode(res.body);
 
       if (res.statusCode == 200 && data['success'] == true) {
         return (data['data']['logs'] as List)
@@ -121,7 +158,7 @@ class ApiService {
             .toList();
       }
     } catch (e) {
-      print('[ERROR] getUserLogs: $e');
+      _log('ERROR_GET_LOGS', e);
     }
 
     return [];
@@ -139,13 +176,15 @@ class ApiService {
         Uri.parse('$dbBaseUrl/insights?uid=$uid&period=$period'),
       );
 
-      final data = jsonDecode(res.body);
+      _log('GET_INSIGHTS', res.body);
+
+      final data = _safeDecode(res.body);
 
       if (res.statusCode == 200 && data['success'] == true) {
         return data['data'];
       }
     } catch (e) {
-      print('[ERROR] getInsights: $e');
+      _log('ERROR_INSIGHTS', e);
     }
 
     return {};
@@ -154,15 +193,17 @@ class ApiService {
   // ─────────────────────────────────────────
   // TIPS (SINGLE SYMPTOM)
   // ─────────────────────────────────────────
-  static Future<List<LifestyleTip>> getTipsForSymptom(String symptom) async {
+  static Future<List<LifestyleTip>> getTipsForSymptom(
+      String symptom) async {
     try {
-      final res = await http.get(
-        Uri.parse(
-          '$dbBaseUrl/tips/for-symptom?symptom=${Uri.encodeComponent(symptom)}&limit=3',
-        ),
-      );
+      final url =
+          '$dbBaseUrl/tips/for-symptom?symptom=${Uri.encodeComponent(symptom)}&limit=3';
 
-      final data = jsonDecode(res.body);
+      final res = await http.get(Uri.parse(url));
+
+      _log('TIPS_SYMPTOM', res.body);
+
+      final data = _safeDecode(res.body);
 
       if (res.statusCode == 200 && data['success'] == true) {
         return (data['data'] as List)
@@ -170,26 +211,30 @@ class ApiService {
             .toList();
       }
     } catch (e) {
-      print('[ERROR] getTipsForSymptom: $e');
+      _log('ERROR_TIPS_SYMPTOM', e);
     }
 
     return [];
   }
 
   // ─────────────────────────────────────────
-  // TIPS (MULTIPLE SYMPTOMS) ✅ FIXED
+  // TIPS (MULTIPLE SYMPTOMS)
   // ─────────────────────────────────────────
   static Future<List<LifestyleTip>> getTips({
     required List<String> symptoms,
   }) async {
     try {
-      final query = symptoms.map((s) => 'symptoms=$s').join('&');
+      final query = symptoms
+          .map((s) => 'symptoms=${Uri.encodeComponent(s)}')
+          .join('&');
 
       final res = await http.get(
         Uri.parse('$dbBaseUrl/tips?$query'),
       );
 
-      final data = jsonDecode(res.body);
+      _log('TIPS_MULTI', res.body);
+
+      final data = _safeDecode(res.body);
 
       if (res.statusCode == 200 && data['success'] == true) {
         return (data['data'] as List)
@@ -197,31 +242,35 @@ class ApiService {
             .toList();
       }
     } catch (e) {
-      print('[ERROR] getTips: $e');
+      _log('ERROR_TIPS_MULTI', e);
     }
 
     return [];
   }
 
   // ─────────────────────────────────────────
-  // CLINICS ✅ FIXED
+  // CLINICS
   // ─────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> getClinicsForTests(
       List<String> tests) async {
     try {
-      final query = tests.map((t) => 'tests=$t').join('&');
+      final query = tests
+          .map((t) => 'tests=${Uri.encodeComponent(t)}')
+          .join('&');
 
       final res = await http.get(
         Uri.parse('$dbBaseUrl/clinics?$query'),
       );
 
-      final data = jsonDecode(res.body);
+      _log('CLINICS', res.body);
+
+      final data = _safeDecode(res.body);
 
       if (res.statusCode == 200 && data['success'] == true) {
         return List<Map<String, dynamic>>.from(data['data']);
       }
     } catch (e) {
-      print('[ERROR] getClinicsForTests: $e');
+      _log('ERROR_CLINICS', e);
     }
 
     return [];
