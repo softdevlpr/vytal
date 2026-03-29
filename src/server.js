@@ -1,5 +1,7 @@
 require("dotenv").config({ path: "D:/vytal/.env" });
+
 const express = require("express");
+const cors = require("cors"); //  ADDED
 const connectDB = require("./config/db");
 
 const authRoutes        = require("./routes/authRoutes");
@@ -15,14 +17,18 @@ const tipRoutes         = require("./routes/tipRoutes");
 const clinicRoutes      = require("./routes/clinicRoutes");
 const userRoutes        = require("./routes/userRoutes");
 
-
 connectDB();
 
 const app = express();
+
+// ─────────────────────────────
+// MIDDLEWARE
+// ─────────────────────────────
+app.use(cors()); //  IMPORTANT FOR FLUTTER
 app.use(express.json());
 
 // ── Existing route mounts ─────────────────────────────────────────────────────
-app.use("/api/auth",      authRoutes);
+app.use("/api/auth",      authRoutes);   // LOGIN + REGISTER WORK HERE
 app.use("/api/user",      profileRoutes);
 app.use("/api",           recommendRoute);
 app.use("/api",           affirmationRoutes);
@@ -36,13 +42,29 @@ app.use("/api/tips",      tipRoutes);
 app.use("/api/clinics",   clinicRoutes);
 app.use("/api/users",     userRoutes);
 
-
-// Test route
+// ─────────────────────────────
+// TEST ROUTE
+// ─────────────────────────────
 app.get("/", (req, res) => {
   res.send("Vytal backend is running");
 });
 
+// ─────────────────────────────
+// GLOBAL ERROR HANDLER (DEBUG HELPER)
+// ─────────────────────────────
+app.use((err, req, res, next) => {
+  console.error(" SERVER ERROR:", err);
+  res.status(500).json({
+    success: false,
+    error: err.message || "Server Error",
+  });
+});
+
+// ─────────────────────────────
+// SERVER
+// ─────────────────────────────
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
