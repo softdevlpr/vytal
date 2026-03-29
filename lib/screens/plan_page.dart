@@ -37,6 +37,7 @@ class _PlanPageState extends State<PlanPage>
   Future<void> _loadCategory(String category) async {
     if (_tipsByCategory.containsKey(category)) return;
     setState(() => _loading[category] = true);
+    print(ApiService.getTips);
     final tips = await ApiService.getTips(
       category: category,
       // Pass user's top symptoms for personalization
