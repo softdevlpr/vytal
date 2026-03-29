@@ -232,7 +232,7 @@ class _LoginPageState extends State<LoginPage> {
     if (emailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const BottomNavController()),
+        MaterialPageRoute(builder: (_) => BottomNavController()),
       );
     } else {
       ScaffoldMessenger.of(
