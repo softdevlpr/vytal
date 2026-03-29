@@ -1,56 +1,68 @@
 const { getDB } = require("../config/db");
 
-// Helper: convert _id ObjectId → string for JSON response
 const clean = (doc) => {
   doc._id = doc._id.toString();
   return doc;
 };
 
-// Helper: compute "since" date from period string
 const sinceDate = (period) => {
   const now = new Date();
-  if (period === "week")  return new Date(now - 7   * 86400000);
-  if (period === "month") return new Date(now - 30  * 86400000);
-  return                         new Date(now - 365 * 86400000); // year
+  if (period === "week") return new Date(now - 7 * 86400000);
+  if (period === "month") return new Date(now - 30 * 86400000);
+  return new Date(now - 365 * 86400000);
 };
 
-// ── POST /logs ────────────────────────────────────────────────────────────────
+// ── POST /api/logs ─────────────────────────────────
 const addLog = async (req, res) => {
   try {
     const db = getDB();
     const body = req.body || {};
-    const { uid, primary_symptom: symptom } = body;
 
-    if (!uid) {
-      return res.status(400).json({ success: false, error: "uid required" });
+    const { uid, primary_symptom } = body;
+
+    if (!uid || !primary_symptom) {
+      return res.status(400).json({
+        success: false,
+        error: "uid and primary_symptom required",
+      });
     }
 
-    // Stamp the log with current UTC time
+    // Save log
     body.logged_at = new Date().toISOString();
     await db.collection("symptom_logs").insertOne(body);
 
-    // Increment symptom score on the user doc
-    if (symptom) {
-      await db.collection("users").updateOne(
-        { uid },
-        { $inc: { [`symptom_scores.${symptom}`]: 1 } }
-      );
-    }
+    // 🔥 UPDATE SCORE (FIXED)
+    await db.collection("users").updateOne(
+      { uid },
+      {
+        $inc: {
+          [`symptom_scores.${primary_symptom}`]: 1,
+        },
+      },
+      { upsert: true } // ✅ IMPORTANT FIX
+    );
 
-    res.json({ success: true, data: { message: "Log saved" } });
+    res.json({
+      success: true,
+      data: { message: "Log saved & score updated" },
+    });
   } catch (e) {
+    console.error("[addLog ERROR]", e);
     res.status(500).json({ success: false, error: e.message });
   }
 };
 
-// ── GET /logs ─────────────────────────────────────────────────────────────────
+// ── GET /api/logs ─────────────────────────────────
 const getLogs = async (req, res) => {
   try {
     const db = getDB();
     const { uid, period = "week" } = req.query;
 
     if (!uid) {
-      return res.status(400).json({ success: false, error: "uid required" });
+      return res.status(400).json({
+        success: false,
+        error: "uid required",
+      });
     }
 
     const since = sinceDate(period);
@@ -66,6 +78,7 @@ const getLogs = async (req, res) => {
       data: { logs: logs.map(clean), count: logs.length },
     });
   } catch (e) {
+    console.error("[getLogs ERROR]", e);
     res.status(500).json({ success: false, error: e.message });
   }
 };
