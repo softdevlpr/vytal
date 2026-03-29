@@ -19,9 +19,7 @@ const getTips = async (req, res) => {
     const baseQuery = {};
     if (category) baseQuery.category = category;
 
-    // ─────────────────────────────
-    // PERSONALIZED
-    // ─────────────────────────────
+   
     if (uid) {
       const user = await db.collection("users").findOne({ uid });
 
@@ -35,16 +33,12 @@ const getTips = async (req, res) => {
         console.log(`[getTips] top symptoms: ${JSON.stringify(topSyms)}`);
 
         if (topSyms.length) {
+          //use exact match instead of regex
           const matched = await db
             .collection("lifestyle_tips")
             .find({
               ...baseQuery,
-              symptoms: {
-                $elemMatch: {
-                  $regex: topSyms.join("|"),
-                  $options: "i",
-                },
-              },
+              symptoms: { $in: topSyms },
             })
             .limit(limit)
             .toArray();
@@ -75,20 +69,14 @@ const getTips = async (req, res) => {
       }
     }
 
-    // ─────────────────────────────
-    // GENERIC
-    // ─────────────────────────────
+ 
     let query = { ...baseQuery };
 
     if (symptoms) {
       const symList = symptoms.split(",").map((s) => s.trim());
 
-      query.symptoms = {
-        $elemMatch: {
-          $regex: symList.join("|"),
-          $options: "i",
-        },
-      };
+      // use $in instead of regex
+      query.symptoms = { $in: symList };
     }
 
     console.log(`[getTips] final query: ${JSON.stringify(query)}`);
@@ -111,9 +99,9 @@ const getTips = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
+
 // GET /api/tips/for-symptom
-// ─────────────────────────────────────────
+
 const getTipsForSymptom = async (req, res) => {
   try {
     const db = getDB();
@@ -122,15 +110,11 @@ const getTipsForSymptom = async (req, res) => {
 
     console.log(`\n[getTipsForSymptom] → symptom: "${symptom}", limit: ${limit}`);
 
+    //  exact match instead of regex
     const tips = await db
       .collection("lifestyle_tips")
       .find({
-        symptoms: {
-          $elemMatch: {
-            $regex: symptom,
-            $options: "i",
-          },
-        },
+        symptoms: symptom,
       })
       .limit(limit)
       .toArray();
