@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'home_page.dart';
+import 'main_screen.dart';
 import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -236,10 +236,11 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const HomePage()),
-    );
+    Navigator.pushAndRemoveUntil(
+     context,
+     MaterialPageRoute(builder: (_) => const MainScreen()),
+     (route) => false,
+);
   }
 
   void _showMessage(String msg) {
