@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { saveSymptomLog } = require("../controllers/logController");
+const { saveSymptomLog } = require("../controllers/scoreController");
 
 router.post("/", saveSymptomLog);
 
