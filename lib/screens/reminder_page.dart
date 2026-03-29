@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -31,7 +30,6 @@ class _ReminderPageState extends State<ReminderPage> {
 
   final String baseUrl = "http://10.0.2.2:3000";
 
-  // ✅ Local list — source of truth for UI
   List<Map<String, dynamic>> _reminders = [];
 
   @override
@@ -49,8 +47,21 @@ class _ReminderPageState extends State<ReminderPage> {
     await flutterLocalNotificationsPlugin.initialize(settings);
 
     tz.initializeTimeZones();
-    final String timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timeZoneName));
+
+    final String timeZoneName = DateTime.now().timeZoneName;
+    try {
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+    } catch (_) {
+      final offset = DateTime.now().timeZoneOffset;
+      final hours = offset.inHours;
+      final sign = hours >= 0 ? '+' : '-';
+      final utcZone = 'Etc/GMT$sign${hours.abs()}';
+      try {
+        tz.setLocalLocation(tz.getLocation(utcZone));
+      } catch (_) {
+        tz.setLocalLocation(tz.UTC);
+      }
+    }
   }
 
   Future<void> fetchReminders() async {
@@ -64,17 +75,17 @@ class _ReminderPageState extends State<ReminderPage> {
       }
     } catch (e) {
       print("Fetch error: $e");
-      // Backend unavailable — local list still works
     }
   }
 
   Future<void> scheduleNotification(String title) async {
-    if (_selectedDate == null || _selectedTime == null) return;
+    if (_selectedTime == null) return;
 
     final now = tz.TZDateTime.now(tz.local);
 
     if (!_isRecurring) {
-      // One-time notification
+      if (_selectedDate == null) return;
+
       final scheduledTime = tz.TZDateTime(
         tz.local,
         _selectedDate!.year,
@@ -83,6 +94,7 @@ class _ReminderPageState extends State<ReminderPage> {
         _selectedTime!.hour,
         _selectedTime!.minute,
       );
+
       if (scheduledTime.isBefore(now)) return;
 
       await flutterLocalNotificationsPlugin.zonedSchedule(
@@ -104,7 +116,6 @@ class _ReminderPageState extends State<ReminderPage> {
             UILocalNotificationDateInterpretation.absoluteTime,
       );
     } else {
-      // Weekly recurring — schedule one notification per selected day
       final Map<String, int> dayMap = {
         "Mon": DateTime.monday,
         "Tue": DateTime.tuesday,
@@ -117,11 +128,11 @@ class _ReminderPageState extends State<ReminderPage> {
 
       for (final day in _selectedDays) {
         final int weekday = dayMap[day]!;
-        // Find next occurrence of this weekday
         DateTime next = DateTime.now();
         while (next.weekday != weekday) {
           next = next.add(const Duration(days: 1));
         }
+
         final scheduledTime = tz.TZDateTime(
           tz.local,
           next.year,
@@ -155,7 +166,6 @@ class _ReminderPageState extends State<ReminderPage> {
   }
 
   Future<void> _saveReminder() async {
-    // ✅ Validate: title and time are required; date required for one-time
     if (_titleController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter a reminder title")),
@@ -181,7 +191,7 @@ class _ReminderPageState extends State<ReminderPage> {
       return;
     }
 
-    final newReminder = {
+    final newReminder = <String, dynamic>{
       "userId": 1,
       "title": _titleController.text.trim(),
       "notes": _notesController.text.trim(),
@@ -190,15 +200,14 @@ class _ReminderPageState extends State<ReminderPage> {
       "daysOfWeek": List<String>.from(_selectedDays),
     };
 
-    // ✅ Add to local list immediately so UI updates right away
+    // Add to local list immediately so UI updates right away
     setState(() {
       _reminders.add(newReminder);
     });
 
-    // Schedule notification
     await scheduleNotification(newReminder["title"] as String);
 
-    // Try to persist to backend (non-blocking)
+    // Try backend (non-blocking)
     try {
       await http.post(
         Uri.parse("$baseUrl/api/reminders"),
@@ -206,10 +215,9 @@ class _ReminderPageState extends State<ReminderPage> {
         body: jsonEncode(newReminder),
       );
     } catch (e) {
-      print("Backend save error (reminder still shown locally): $e");
+      print("Backend save error: $e");
     }
 
-    // Clear form
     _titleController.clear();
     _notesController.clear();
     setState(() {
@@ -339,7 +347,7 @@ class _ReminderPageState extends State<ReminderPage> {
   Widget _reminderCard(Map<String, dynamic> r) {
     final days = r["daysOfWeek"];
     final daysStr = (days is List && days.isNotEmpty)
-        ? days.join(", ")
+        ? (days as List).join(", ")
         : "One-time";
 
     return Container(
@@ -367,7 +375,7 @@ class _ReminderPageState extends State<ReminderPage> {
           ),
           if ((r["notes"] ?? "").toString().isNotEmpty)
             Text(
-              r["notes"],
+              r["notes"].toString(),
               style: GoogleFonts.poppins(color: Colors.white38),
             ),
         ],
