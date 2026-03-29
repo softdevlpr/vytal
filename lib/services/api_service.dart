@@ -10,7 +10,7 @@ class ApiService {
   static const _headers = {'Content-Type': 'application/json'};
 
   // ─────────────────────────────
-  // ML PREDICTION
+  // ML PREDICTION 
   // ─────────────────────────────
   static Future<Map<String, dynamic>> predict({
     required String symptom,
@@ -28,10 +28,63 @@ class ApiService {
     final data = jsonDecode(res.body);
 
     if (res.statusCode == 200 && data['success'] == true) {
-      return data['data'];
+      return data['data']; // 
     }
 
     throw Exception(data['error'] ?? 'Prediction failed');
+  }
+
+  // ─────────────────────────────
+  //  AUTH 
+  // ─────────────────────────────
+  static Future<Map<String, dynamic>> register({
+    required String name,
+    required String age,
+    required String gender,
+    required String email,
+    required String password,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$dbBaseUrl/auth/register'),
+      headers: _headers,
+      body: jsonEncode({
+        "name": name,
+        "age": age,
+        "gender": gender,
+        "email": email,
+        "password": password,
+      }),
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode == 200 && data['success'] == true) {
+      return data;
+    }
+
+    throw Exception(data['error'] ?? "Register failed");
+  }
+
+  static Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$dbBaseUrl/auth/login'),
+      headers: _headers,
+      body: jsonEncode({
+        "email": email,
+        "password": password,
+      }),
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode == 200 && data['success'] == true) {
+      return data;
+    }
+
+    throw Exception(data['error'] ?? "Login failed");
   }
 
   // ─────────────────────────────
@@ -133,10 +186,10 @@ class ApiService {
   }
 
   // ─────────────────────────────
-  // TIPS (🔥 PERSONALIZED FIX)
+  // TIPS
   // ─────────────────────────────
   static Future<List<LifestyleTip>> getTips({
-    String? uid, // ✅ ADDED FOR PERSONALIZATION
+    String? uid,
     String? category,
     List<String>? symptoms,
     int limit = 5,
@@ -144,19 +197,16 @@ class ApiService {
     try {
       String query = '';
 
-      // ✅ UID → PERSONALIZATION
       if (uid != null && uid.isNotEmpty) {
         query = 'uid=${Uri.encodeComponent(uid)}';
       }
 
-      // category (optional)
       if (category != null) {
         query = query.isEmpty
             ? 'category=${Uri.encodeComponent(category)}'
             : '$query&category=${Uri.encodeComponent(category)}';
       }
 
-      // symptoms (optional fallback)
       if (symptoms != null && symptoms.isNotEmpty) {
         final symQuery = symptoms
             .map((s) => 'symptoms=${Uri.encodeComponent(s)}')
@@ -178,32 +228,6 @@ class ApiService {
       }
     } catch (e) {
       print('[ERROR] getTips: $e');
-    }
-
-    return [];
-  }
-
-  // ─────────────────────────────
-  // TIPS (SINGLE SYMPTOM - KEEP FOR DEBUG)
-  // ─────────────────────────────
-  static Future<List<LifestyleTip>> getTipsForSymptom(
-      String symptom) async {
-    try {
-      final res = await http.get(
-        Uri.parse(
-          '$dbBaseUrl/tips/for-symptom?symptom=${Uri.encodeComponent(symptom)}&limit=3',
-        ),
-      );
-
-      final data = jsonDecode(res.body);
-
-      if (res.statusCode == 200 && data['success'] == true) {
-        return (data['data'] as List)
-            .map((e) => LifestyleTip.fromMap(e))
-            .toList();
-      }
-    } catch (e) {
-      print('[ERROR] getTipsForSymptom: $e');
     }
 
     return [];
