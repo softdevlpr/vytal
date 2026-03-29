@@ -21,10 +21,20 @@ class _RegisterPageState extends State<RegisterPage> {
   bool isLoading = false;
 
   @override
+  void dispose() {
+    nameController.dispose();
+    ageController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
+          /// BACKGROUND
           Image.asset(
             "assets/images/onboarding2.jpg",
             fit: BoxFit.cover,
@@ -32,10 +42,12 @@ class _RegisterPageState extends State<RegisterPage> {
             height: double.infinity,
           ),
 
+          /// OVERLAY
           Container(
             color: Colors.black.withOpacity(0.6),
           ),
 
+          /// CONTENT
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
@@ -57,16 +69,27 @@ class _RegisterPageState extends State<RegisterPage> {
                   _input(nameController, "Full Name"),
                   _input(ageController, "Age", isNumber: true),
 
+                  const SizedBox(height: 10),
+
                   DropdownButtonFormField<String>(
                     value: selectedGender,
                     dropdownColor: Colors.black,
-                    hint: const Text("Gender"),
+                    style: const TextStyle(color: Colors.white),
+                    hint: const Text("Gender",
+                        style: TextStyle(color: Colors.white54)),
                     items: const [
                       DropdownMenuItem(value: "Male", child: Text("Male")),
                       DropdownMenuItem(value: "Female", child: Text("Female")),
                       DropdownMenuItem(value: "Other", child: Text("Other")),
                     ],
                     onChanged: (val) => setState(() => selectedGender = val),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
 
                   _input(emailController, "Email"),
@@ -74,12 +97,25 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 20),
 
-                  ElevatedButton(
-                    onPressed: isLoading ? null : _register,
-                    child: isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text("Register"),
+                  /// REGISTER BUTTON
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : _register,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purpleAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text("Register"),
+                    ),
                   ),
+
+                  const SizedBox(height: 10),
 
                   TextButton(
                     onPressed: () {
@@ -90,7 +126,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       );
                     },
-                    child: const Text("Already have account? Login"),
+                    child: const Text(
+                      "Already have account? Login",
+                      style: TextStyle(color: Colors.white70),
+                    ),
                   ),
                 ],
               ),
@@ -101,6 +140,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  /// INPUT FIELD
   Widget _input(TextEditingController controller, String hint,
       {bool isNumber = false, bool isPassword = false}) {
     return Padding(
@@ -123,13 +163,12 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  /// REGISTER FUNCTION (FIXED)
   void _register() async {
     if (nameController.text.isEmpty ||
-        ageController.text.isEmpty ||
-        selectedGender == null ||
         emailController.text.isEmpty ||
         passwordController.text.isEmpty) {
-      _show("Fill all fields");
+      _show("Please fill required fields");
       return;
     }
 
@@ -137,24 +176,23 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       final res = await ApiService.register(
-        name: nameController.text,
-        age: ageController.text,
-        gender: selectedGender!,
-        email: emailController.text,
-        password: passwordController.text,
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
 
-      if (res['success'] == true) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-          (route) => false,
-        );
-      } else {
-        _show(res['error'] ?? "Registration failed");
-      }
+      print("REGISTER RESPONSE: $res");
+
+      /// SUCCESS → NAVIGATE TO MAIN SCREEN (WITH NAVBAR)
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+        (route) => false,
+      );
+
     } catch (e) {
-      _show("Server error");
+      print("REGISTER ERROR: $e");
+      _show(e.toString());
     }
 
     setState(() => isLoading = false);
