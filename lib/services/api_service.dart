@@ -4,14 +4,15 @@ import '../models/models.dart';
 
 class ApiService {
   static const String mlBaseUrl = 'http://10.0.2.2:8000';
-  static const String dbBaseUrl = 'http://10.0.2.2:5000';
+  static const String dbBaseUrl = 'http://10.0.2.2:3000';
 
-  static const _headers = {'Content-Type': 'application/json'};
+  static const Map<String, String> _headers = {
+    'Content-Type': 'application/json',
+  };
 
   // ─────────────────────────────────────────
-  // ML PREDICTION (WORKING)
+  // ML PREDICTION
   // ─────────────────────────────────────────
-
   static Future<Map<String, dynamic>> predict({
     required String symptom,
     required Map<String, int> answers,
@@ -23,17 +24,11 @@ class ApiService {
       'answers': answers,
     };
 
-    print('[ML] POST $url');
-    print('[ML] Payload: $payload');
-
     final res = await http.post(
       url,
       headers: _headers,
       body: jsonEncode(payload),
     );
-
-    print('[ML] Status: ${res.statusCode}');
-    print('[ML] Body: ${res.body}');
 
     final data = jsonDecode(res.body);
 
@@ -45,43 +40,21 @@ class ApiService {
   }
 
   // ─────────────────────────────────────────
-  // SYMPTOM LOGS (NODE BACKEND)
+  // USER API
   // ─────────────────────────────────────────
-
-  static Future<void> saveSymptomLog(SymptomLog log) async {
-    try {
-      final url = Uri.parse('$dbBaseUrl/logs');
-
-      print('[DB] saveSymptomLog -> $url');
-      print('[DB] data -> ${log.toMap()}');
-
-      final res = await http.post(
-        url,
-        headers: _headers,
-        body: jsonEncode(log.toMap()),
-      );
-
-      print('[DB] status: ${res.statusCode}');
-      print('[DB] body: ${res.body}');
-    } catch (e) {
-      print('[DB ERROR] saveSymptomLog: $e');
-    }
-  }
-
-  // ─────────────────────────────────────────
-  // USER API (RESTORED FOR UI COMPILATION)
-  // ─────────────────────────────────────────
-
   static Future<UserModel?> getUser(String uid) async {
     try {
-      final res = await http.get(Uri.parse('$dbBaseUrl/users/$uid'));
+      final res = await http.get(
+        Uri.parse('$dbBaseUrl/users/$uid'),
+      );
+
       final data = jsonDecode(res.body);
 
       if (res.statusCode == 200 && data['success'] == true) {
         return UserModel.fromMap(data['data']);
       }
     } catch (e) {
-      print('[DB ERROR] getUser: $e');
+      print('[ERROR] getUser: $e');
     }
     return null;
   }
@@ -94,10 +67,11 @@ class ApiService {
         body: jsonEncode(user.toMap()),
       );
 
-      print('[DB] updateUser status: ${res.statusCode}');
-      print('[DB] updateUser body: ${res.body}');
+      if (res.statusCode != 200) {
+        throw Exception('Failed to update user');
+      }
     } catch (e) {
-      print('[DB ERROR] updateUser: $e');
+      print('[ERROR] updateUser: $e');
     }
   }
 
@@ -107,67 +81,32 @@ class ApiService {
         Uri.parse('$dbBaseUrl/users/$uid'),
       );
 
-      print('[DB] deleteUser status: ${res.statusCode}');
-    } catch (e) {
-      print('[DB ERROR] deleteUser: $e');
-    }
-  }
-
-  // ─────────────────────────────────────────
-  // INSIGHTS (RESTORED)
-  // ─────────────────────────────────────────
-
-  static Future<Map<String, dynamic>> getInsights({
-    required String uid,
-    required String period,
-  }) async {
-    try {
-      final url = Uri.parse('$dbBaseUrl/insights?uid=$uid&period=$period');
-
-      print('[DB] getInsights -> $url');
-
-      final res = await http.get(url);
-      final data = jsonDecode(res.body);
-
-      if (res.statusCode == 200 && data['success'] == true) {
-        return data['data'];
+      if (res.statusCode != 200) {
+        throw Exception('Failed to delete user');
       }
     } catch (e) {
-      print('[DB ERROR] getInsights: $e');
+      print('[ERROR] deleteUser: $e');
     }
-
-    return {};
   }
 
   // ─────────────────────────────────────────
-  // TIPS (RESTORED)
+  // SYMPTOM LOGS
   // ─────────────────────────────────────────
-
-  static Future<List<LifestyleTip>> getTipsForSymptom(String symptom) async {
+  static Future<void> saveSymptomLog(SymptomLog log) async {
     try {
-      final url = Uri.parse(
-          '$dbBaseUrl/tips/for-symptom?symptom=${Uri.encodeComponent(symptom)}&limit=3');
+      final res = await http.post(
+        Uri.parse('$dbBaseUrl/logs'),
+        headers: _headers,
+        body: jsonEncode(log.toMap()),
+      );
 
-      print('[DB] getTipsForSymptom -> $url');
-
-      final res = await http.get(url);
-      final data = jsonDecode(res.body);
-
-      if (res.statusCode == 200 && data['success'] == true) {
-        return (data['data'] as List)
-            .map((t) => LifestyleTip.fromMap(t))
-            .toList();
+      if (res.statusCode != 200 && res.statusCode != 201) {
+        throw Exception('Failed to save log');
       }
     } catch (e) {
-      print('[DB ERROR] getTipsForSymptom: $e');
+      print('[ERROR] saveSymptomLog: $e');
     }
-
-    return [];
   }
-
-  // ─────────────────────────────────────────
-  // OPTIONAL FALLBACK METHODS
-  // ─────────────────────────────────────────
 
   static Future<List<SymptomLog>> getUserLogs({
     required String uid,
@@ -175,9 +114,10 @@ class ApiService {
   }) async {
     try {
       final query = 'uid=$uid${period != null ? '&period=$period' : ''}';
-      final url = Uri.parse('$dbBaseUrl/logs?$query');
+      final res = await http.get(
+        Uri.parse('$dbBaseUrl/logs?$query'),
+      );
 
-      final res = await http.get(url);
       final data = jsonDecode(res.body);
 
       if (res.statusCode == 200 && data['success'] == true) {
@@ -186,7 +126,57 @@ class ApiService {
             .toList();
       }
     } catch (e) {
-      print('[DB ERROR] getUserLogs: $e');
+      print('[ERROR] getUserLogs: $e');
+    }
+
+    return [];
+  }
+
+  // ─────────────────────────────────────────
+  // INSIGHTS
+  // ─────────────────────────────────────────
+  static Future<Map<String, dynamic>> getInsights({
+    required String uid,
+    required String period,
+  }) async {
+    try {
+      final res = await http.get(
+        Uri.parse('$dbBaseUrl/insights?uid=$uid&period=$period'),
+      );
+
+      final data = jsonDecode(res.body);
+
+      if (res.statusCode == 200 && data['success'] == true) {
+        return data['data'];
+      }
+    } catch (e) {
+      print('[ERROR] getInsights: $e');
+    }
+
+    return {};
+  }
+
+  // ─────────────────────────────────────────
+  // TIPS 
+  // ─────────────────────────────────────────
+  static Future<List<LifestyleTip>> getTipsForSymptom(
+      String symptom) async {
+    try {
+      final res = await http.get(
+        Uri.parse(
+          '$dbBaseUrl/tips/for-symptom?symptom=${Uri.encodeComponent(symptom)}&limit=3',
+        ),
+      );
+
+      final data = jsonDecode(res.body);
+
+      if (res.statusCode == 200 && data['success'] == true) {
+        return (data['data'] as List)
+            .map((t) => LifestyleTip.fromMap(t))
+            .toList();
+      }
+    } catch (e) {
+      print('[ERROR] getTipsForSymptom: $e');
     }
 
     return [];
