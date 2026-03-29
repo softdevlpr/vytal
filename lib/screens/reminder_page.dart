@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../main.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+
+// ✅ GLOBAL NOTIFICATION INSTANCE
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 class ReminderPage extends StatefulWidget {
   const ReminderPage({super.key});
@@ -25,13 +28,7 @@ class _ReminderPageState extends State<ReminderPage> {
   List<String> _selectedDays = [];
 
   final List<String> weekDays = [
-    "Mon",
-    "Tue",
-    "Wed",
-    "Thu",
-    "Fri",
-    "Sat",
-    "Sun",
+    "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
   ];
 
   final String baseUrl = "http://10.0.2.2:3000";
@@ -41,10 +38,24 @@ class _ReminderPageState extends State<ReminderPage> {
   @override
   void initState() {
     super.initState();
+    _initNotifications();
     fetchReminders();
   }
 
-  // 🔥 FETCH
+  // ================= NOTIFICATION INIT =================
+  Future<void> _initNotifications() async {
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings settings =
+        InitializationSettings(android: androidSettings);
+
+    await flutterLocalNotificationsPlugin.initialize(settings);
+
+    tz.initializeTimeZones();
+  }
+
+  // ================= FETCH =================
   Future<void> fetchReminders() async {
     try {
       final res = await http.get(Uri.parse("$baseUrl/api/reminders?userId=1"));
@@ -59,6 +70,7 @@ class _ReminderPageState extends State<ReminderPage> {
     }
   }
 
+  // ================= NOTIFICATION =================
   Future<void> scheduleNotification(String title) async {
     if (_selectedDate == null || _selectedTime == null) return;
 
@@ -73,13 +85,7 @@ class _ReminderPageState extends State<ReminderPage> {
       _selectedTime!.minute,
     );
 
-    print("NOW: $now");
-    print("SCHEDULED: $scheduledTime");
-
-    if (scheduledTime.isBefore(now)) {
-      print("❌ Time is in past, not scheduling");
-      return;
-    }
+    if (scheduledTime.isBefore(now)) return;
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -99,10 +105,46 @@ class _ReminderPageState extends State<ReminderPage> {
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
     );
-
-    print("✅ Notification Scheduled");
   }
 
+  // ================= SAVE =================
+  Future<void> _saveReminder() async {
+    if (_titleController.text.isEmpty || _selectedTime == null) return;
+
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/api/reminders"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "userId": 1,
+          "title": _titleController.text,
+          "notes": _notesController.text,
+          "timeOfDay": _selectedTime!.format(context),
+          "isRecurring": _isRecurring,
+          "daysOfWeek": _selectedDays,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        await scheduleNotification(_titleController.text);
+        await fetchReminders();
+
+        _titleController.clear();
+        _notesController.clear();
+
+        setState(() {
+          _selectedDate = null;
+          _selectedTime = null;
+          _isRecurring = false;
+          _selectedDays.clear();
+        });
+      }
+    } catch (e) {
+      print("Save error: $e");
+    }
+  }
+
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,12 +156,10 @@ class _ReminderPageState extends State<ReminderPage> {
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // 🔥 FORM
             _inputField("Reminder note", _titleController),
             const SizedBox(height: 12),
 
@@ -199,7 +239,6 @@ class _ReminderPageState extends State<ReminderPage> {
 
             const SizedBox(height: 20),
 
-            // 🔥 TITLE
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -214,7 +253,6 @@ class _ReminderPageState extends State<ReminderPage> {
 
             const SizedBox(height: 10),
 
-            // 🔥 LIST
             Expanded(
               child: _reminders.isEmpty
                   ? Center(
@@ -236,7 +274,6 @@ class _ReminderPageState extends State<ReminderPage> {
     );
   }
 
-  // 🔥 CARD
   Widget _reminderCard(dynamic r) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -262,13 +299,12 @@ class _ReminderPageState extends State<ReminderPage> {
             style: GoogleFonts.poppins(color: Colors.white54),
           ),
           if (r["notes"] != "")
-            Text(r["notes"], style: GoogleFonts.poppins(color: Colors.white38)),
+            Text(r["notes"],
+                style: GoogleFonts.poppins(color: Colors.white38)),
         ],
       ),
     );
   }
-
-  // ================= UI =================
 
   Widget _inputField(String label, TextEditingController controller) {
     return TextField(
@@ -311,8 +347,6 @@ class _ReminderPageState extends State<ReminderPage> {
     );
   }
 
-  // ================= PICKERS =================
-
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -332,45 +366,6 @@ class _ReminderPageState extends State<ReminderPage> {
     );
     if (picked != null) {
       setState(() => _selectedTime = picked);
-    }
-  }
-
-  // ================= SAVE =================
-
-  Future<void> _saveReminder() async {
-    if (_titleController.text.isEmpty || _selectedTime == null) return;
-
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/api/reminders"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "userId": 1,
-          "title": _titleController.text,
-          "notes": _notesController.text,
-          "timeOfDay": _selectedTime!.format(context),
-          "isRecurring": _isRecurring,
-          "daysOfWeek": _selectedDays,
-        }),
-      );
-
-      if (response.statusCode == 201) {
-        await scheduleNotification(_titleController.text);
-
-        await fetchReminders();
-
-        _titleController.clear();
-        _notesController.clear();
-
-        setState(() {
-          _selectedDate = null;
-          _selectedTime = null;
-          _isRecurring = false;
-          _selectedDays.clear();
-        });
-      }
-    } catch (e) {
-      print(e);
     }
   }
 }
