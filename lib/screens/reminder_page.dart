@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
-// ✅ GLOBAL NOTIFICATION INSTANCE
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
@@ -27,13 +27,12 @@ class _ReminderPageState extends State<ReminderPage> {
   bool _isRecurring = false;
   List<String> _selectedDays = [];
 
-  final List<String> weekDays = [
-    "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
-  ];
+  final List<String> weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   final String baseUrl = "http://10.0.2.2:3000";
 
-  List<dynamic> _reminders = [];
+  // ✅ Local list — source of truth for UI
+  List<Map<String, dynamic>> _reminders = [];
 
   @override
   void initState() {
@@ -42,109 +41,185 @@ class _ReminderPageState extends State<ReminderPage> {
     fetchReminders();
   }
 
-  // ================= NOTIFICATION INIT =================
   Future<void> _initNotifications() async {
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-
     const InitializationSettings settings =
         InitializationSettings(android: androidSettings);
-
     await flutterLocalNotificationsPlugin.initialize(settings);
 
     tz.initializeTimeZones();
+    final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
   }
 
-  // ================= FETCH =================
   Future<void> fetchReminders() async {
     try {
       final res = await http.get(Uri.parse("$baseUrl/api/reminders?userId=1"));
-
       if (res.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(res.body);
         setState(() {
-          _reminders = jsonDecode(res.body);
+          _reminders = data.map((e) => Map<String, dynamic>.from(e)).toList();
         });
       }
     } catch (e) {
       print("Fetch error: $e");
+      // Backend unavailable — local list still works
     }
   }
 
-  // ================= NOTIFICATION =================
   Future<void> scheduleNotification(String title) async {
     if (_selectedDate == null || _selectedTime == null) return;
 
     final now = tz.TZDateTime.now(tz.local);
 
-    final scheduledTime = tz.TZDateTime(
-      tz.local,
-      _selectedDate!.year,
-      _selectedDate!.month,
-      _selectedDate!.day,
-      _selectedTime!.hour,
-      _selectedTime!.minute,
-    );
-
-    if (scheduledTime.isBefore(now)) return;
-
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      "It's time for your reminder ⏰",
-      scheduledTime,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'reminder_channel',
-          'Reminders',
-          channelDescription: 'Reminder notifications',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.alarmClock,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-    );
-  }
-
-  // ================= SAVE =================
-  Future<void> _saveReminder() async {
-    if (_titleController.text.isEmpty || _selectedTime == null) return;
-
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/api/reminders"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "userId": 1,
-          "title": _titleController.text,
-          "notes": _notesController.text,
-          "timeOfDay": _selectedTime!.format(context),
-          "isRecurring": _isRecurring,
-          "daysOfWeek": _selectedDays,
-        }),
+    if (!_isRecurring) {
+      // One-time notification
+      final scheduledTime = tz.TZDateTime(
+        tz.local,
+        _selectedDate!.year,
+        _selectedDate!.month,
+        _selectedDate!.day,
+        _selectedTime!.hour,
+        _selectedTime!.minute,
       );
+      if (scheduledTime.isBefore(now)) return;
 
-      if (response.statusCode == 201) {
-        await scheduleNotification(_titleController.text);
-        await fetchReminders();
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title,
+        "It's time for your reminder ⏰",
+        scheduledTime,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'reminder_channel',
+            'Reminders',
+            channelDescription: 'Reminder notifications',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } else {
+      // Weekly recurring — schedule one notification per selected day
+      final Map<String, int> dayMap = {
+        "Mon": DateTime.monday,
+        "Tue": DateTime.tuesday,
+        "Wed": DateTime.wednesday,
+        "Thu": DateTime.thursday,
+        "Fri": DateTime.friday,
+        "Sat": DateTime.saturday,
+        "Sun": DateTime.sunday,
+      };
 
-        _titleController.clear();
-        _notesController.clear();
+      for (final day in _selectedDays) {
+        final int weekday = dayMap[day]!;
+        // Find next occurrence of this weekday
+        DateTime next = DateTime.now();
+        while (next.weekday != weekday) {
+          next = next.add(const Duration(days: 1));
+        }
+        final scheduledTime = tz.TZDateTime(
+          tz.local,
+          next.year,
+          next.month,
+          next.day,
+          _selectedTime!.hour,
+          _selectedTime!.minute,
+        );
 
-        setState(() {
-          _selectedDate = null;
-          _selectedTime = null;
-          _isRecurring = false;
-          _selectedDays.clear();
-        });
+        await flutterLocalNotificationsPlugin.zonedSchedule(
+          DateTime.now().millisecondsSinceEpoch ~/ 1000 + weekday,
+          title,
+          "It's time for your reminder ⏰",
+          scheduledTime,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'reminder_channel',
+              'Reminders',
+              channelDescription: 'Reminder notifications',
+              importance: Importance.max,
+              priority: Priority.high,
+            ),
+          ),
+          androidScheduleMode: AndroidScheduleMode.alarmClock,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        );
       }
-    } catch (e) {
-      print("Save error: $e");
     }
   }
 
-  // ================= UI =================
+  Future<void> _saveReminder() async {
+    // ✅ Validate: title and time are required; date required for one-time
+    if (_titleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter a reminder title")),
+      );
+      return;
+    }
+    if (_selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please pick a time")),
+      );
+      return;
+    }
+    if (!_isRecurring && _selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please pick a date for one-time reminder")),
+      );
+      return;
+    }
+    if (_isRecurring && _selectedDays.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select at least one day")),
+      );
+      return;
+    }
+
+    final newReminder = {
+      "userId": 1,
+      "title": _titleController.text.trim(),
+      "notes": _notesController.text.trim(),
+      "timeOfDay": _selectedTime!.format(context),
+      "isRecurring": _isRecurring,
+      "daysOfWeek": List<String>.from(_selectedDays),
+    };
+
+    // ✅ Add to local list immediately so UI updates right away
+    setState(() {
+      _reminders.add(newReminder);
+    });
+
+    // Schedule notification
+    await scheduleNotification(newReminder["title"] as String);
+
+    // Try to persist to backend (non-blocking)
+    try {
+      await http.post(
+        Uri.parse("$baseUrl/api/reminders"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(newReminder),
+      );
+    } catch (e) {
+      print("Backend save error (reminder still shown locally): $e");
+    }
+
+    // Clear form
+    _titleController.clear();
+    _notesController.clear();
+    setState(() {
+      _selectedDate = null;
+      _selectedTime = null;
+      _isRecurring = false;
+      _selectedDays.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -162,10 +237,8 @@ class _ReminderPageState extends State<ReminderPage> {
           children: [
             _inputField("Reminder note", _titleController),
             const SizedBox(height: 12),
-
             _inputField("Notes (optional)", _notesController),
             const SizedBox(height: 16),
-
             _pickerTile(
               title: _selectedDate == null
                   ? "Pick date"
@@ -173,9 +246,7 @@ class _ReminderPageState extends State<ReminderPage> {
               icon: Icons.calendar_today,
               onTap: _pickDate,
             ),
-
             const SizedBox(height: 12),
-
             _pickerTile(
               title: _selectedTime == null
                   ? "Pick time"
@@ -183,9 +254,7 @@ class _ReminderPageState extends State<ReminderPage> {
               icon: Icons.access_time,
               onTap: _pickTime,
             ),
-
             const SizedBox(height: 12),
-
             SwitchListTile(
               value: _isRecurring,
               onChanged: (val) {
@@ -200,7 +269,6 @@ class _ReminderPageState extends State<ReminderPage> {
               ),
               activeColor: const Color(0xFF9D4EDD),
             ),
-
             if (_isRecurring)
               Wrap(
                 spacing: 8,
@@ -219,9 +287,7 @@ class _ReminderPageState extends State<ReminderPage> {
                   );
                 }).toList(),
               ),
-
             const SizedBox(height: 20),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -236,9 +302,7 @@ class _ReminderPageState extends State<ReminderPage> {
                 child: Text("Save Reminder", style: GoogleFonts.poppins()),
               ),
             ),
-
             const SizedBox(height: 20),
-
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -250,9 +314,7 @@ class _ReminderPageState extends State<ReminderPage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 10),
-
             Expanded(
               child: _reminders.isEmpty
                   ? Center(
@@ -274,7 +336,12 @@ class _ReminderPageState extends State<ReminderPage> {
     );
   }
 
-  Widget _reminderCard(dynamic r) {
+  Widget _reminderCard(Map<String, dynamic> r) {
+    final days = r["daysOfWeek"];
+    final daysStr = (days is List && days.isNotEmpty)
+        ? days.join(", ")
+        : "One-time";
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -286,7 +353,7 @@ class _ReminderPageState extends State<ReminderPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            r["title"],
+            r["title"] ?? "",
             style: GoogleFonts.poppins(
               color: Colors.white,
               fontSize: 16,
@@ -295,12 +362,14 @@ class _ReminderPageState extends State<ReminderPage> {
           ),
           const SizedBox(height: 6),
           Text(
-            "${r["timeOfDay"]} • ${r["isRecurring"] ? r["daysOfWeek"].join(", ") : "One-time"}",
+            "${r["timeOfDay"]} • ${r["isRecurring"] == true ? daysStr : "One-time"}",
             style: GoogleFonts.poppins(color: Colors.white54),
           ),
-          if (r["notes"] != "")
-            Text(r["notes"],
-                style: GoogleFonts.poppins(color: Colors.white38)),
+          if ((r["notes"] ?? "").toString().isNotEmpty)
+            Text(
+              r["notes"],
+              style: GoogleFonts.poppins(color: Colors.white38),
+            ),
         ],
       ),
     );
@@ -338,11 +407,7 @@ class _ReminderPageState extends State<ReminderPage> {
         onTap: onTap,
         leading: Icon(icon, color: Colors.white),
         title: Text(title, style: GoogleFonts.poppins(color: Colors.white)),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 14,
-          color: Colors.white54,
-        ),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white54),
       ),
     );
   }
@@ -354,9 +419,7 @@ class _ReminderPageState extends State<ReminderPage> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
+    if (picked != null) setState(() => _selectedDate = picked);
   }
 
   Future<void> _pickTime() async {
@@ -364,8 +427,6 @@ class _ReminderPageState extends State<ReminderPage> {
       context: context,
       initialTime: TimeOfDay.now(),
     );
-    if (picked != null) {
-      setState(() => _selectedTime = picked);
-    }
+    if (picked != null) setState(() => _selectedTime = picked);
   }
 }
