@@ -1,43 +1,73 @@
-const Reminder = require("../models/reminder.model");
+const { getDB }  = require("../config/db");
+const { ObjectId } = require("mongodb");
 
-exports.createReminder = async (req, res) => {
+const clean = (doc) => { doc._id = doc._id.toString(); return doc; };
+
+// GET /reminders?uid=xxx
+const getReminders = async (req, res) => {
   try {
-    console.log("API HIT 🔥");
-    console.log("Body:", req.body);
+    const db  = getDB();
+    const { uid } = req.query;
 
-    const { userId, title, notes, timeOfDay, isRecurring, daysOfWeek } =
-      req.body;
+    const reminders = await db
+      .collection("reminders")
+      .find({ uid })
+      .toArray();
 
-    if (userId === undefined || !title || !timeOfDay) {
-      return res.status(400).json({
-        message: "userId, title and timeOfDay are required",
-      });
-    }
-
-    const reminder = new Reminder({
-      userId,
-      title,
-      notes: notes || "",
-      timeOfDay,
-      isRecurring: isRecurring || false,
-      daysOfWeek: daysOfWeek || [],
-    });
-    console.log("Before Save 🚀");
-
-    const savedReminder = await reminder.save();
-
-    console.log("Saved in DB ✅", savedReminder);
-
-    res.status(201).json({
-      message: "Reminder created successfully",
-      reminder: savedReminder,
-    });
-  } catch (error) {
-    console.error("ERROR ❌", error);
-
-    res.status(500).json({
-      message: "Error creating reminder",
-      error: error.message,
-    });
+    res.json({ success: true, data: reminders.map(clean) });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
   }
 };
+
+// POST /reminders
+const addReminder = async (req, res) => {
+  try {
+    const db   = getDB();
+    const body = req.body || {};
+    body.created_at = new Date().toISOString();
+
+    const result = await db.collection("reminders").insertOne(body);
+
+    // Return the saved doc with its new _id
+    body._id = result.insertedId.toString();
+    res.json({ success: true, data: body });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+};
+
+// DELETE /reminders/:rid
+const deleteReminder = async (req, res) => {
+  try {
+    const db = getDB();
+    await db
+      .collection("reminders")
+      .deleteOne({ _id: new ObjectId(req.params.rid) });
+
+    res.json({ success: true, data: { message: "Deleted" } });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+};
+
+// PATCH /reminders/:rid  — toggle is_active
+const toggleReminder = async (req, res) => {
+  try {
+    const db       = getDB();
+    const is_active = req.body?.is_active ?? true;
+
+    await db
+      .collection("reminders")
+      .updateOne(
+        { _id: new ObjectId(req.params.rid) },
+        { $set: { is_active } }
+      );
+
+    res.json({ success: true, data: { message: "Updated" } });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+};
+
+module.exports = { getReminders, addReminder, deleteReminder, toggleReminder };
