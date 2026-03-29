@@ -19,7 +19,7 @@ if not MONGO_URI:
 # -----------------------------
 DB_NAME = "VYTALDB"
 COLLECTION_NAME = "symptom_dataset"
-EXCEL_FILE = "symptom_v5.xlsx"
+EXCEL_FILE = r"D:\vytal\lib\data\symptom_v5.xlsx"
 
 # -----------------------------
 # CONNECT TO MONGODB
