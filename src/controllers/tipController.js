@@ -20,7 +20,7 @@ const getTips = async (req, res) => {
     if (category) baseQuery.category = category;
 
     // ─────────────────────────────
-    // PERSONALIZED (using user data)
+    // PERSONALIZED
     // ─────────────────────────────
     if (uid) {
       const user = await db.collection("users").findOne({ uid });
@@ -40,13 +40,14 @@ const getTips = async (req, res) => {
             .find({
               ...baseQuery,
               symptoms: {
-                $in: topSyms.map((s) => new RegExp(s, "i")),
+                $elemMatch: {
+                  $regex: topSyms.join("|"),
+                  $options: "i",
+                },
               },
             })
             .limit(limit)
             .toArray();
-
-          console.log(`[getTips] personalized matched: ${matched.length}`);
 
           if (matched.length >= limit) {
             return res.json({
@@ -55,7 +56,6 @@ const getTips = async (req, res) => {
             });
           }
 
-          // fallback (fill remaining)
           const matchedIds = matched.map((m) => m._id);
 
           const rest = await db
@@ -76,7 +76,7 @@ const getTips = async (req, res) => {
     }
 
     // ─────────────────────────────
-    // GENERIC (based on symptoms)
+    // GENERIC
     // ─────────────────────────────
     let query = { ...baseQuery };
 
@@ -84,7 +84,10 @@ const getTips = async (req, res) => {
       const symList = symptoms.split(",").map((s) => s.trim());
 
       query.symptoms = {
-        $in: symList.map((s) => new RegExp(s, "i")),
+        $elemMatch: {
+          $regex: symList.join("|"),
+          $options: "i",
+        },
       };
     }
 
@@ -123,7 +126,10 @@ const getTipsForSymptom = async (req, res) => {
       .collection("lifestyle_tips")
       .find({
         symptoms: {
-          $in: [new RegExp(symptom, "i")],
+          $elemMatch: {
+            $regex: symptom,
+            $options: "i",
+          },
         },
       })
       .limit(limit)
