@@ -30,7 +30,7 @@ class _TestResultPageState extends State<TestResultPage> {
 
   Future<void> _loadTips() async {
     final tips =
-        await ApiService.getTipsForSymptom(widget.log.primarySymptom);
+        await ApiService.getTips(uid: widget.log.uid);
     setState(() {
       _tips = tips;
       _loadingTips = false;
