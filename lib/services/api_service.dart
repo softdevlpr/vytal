@@ -3,16 +3,13 @@ import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
 class ApiService {
-  // ── BACKENDS ─────────────────────────────
   static const String mlBaseUrl = 'http://10.0.2.2:8000';
-
-  // Change this when Node backend is ready
   static const String dbBaseUrl = 'http://10.0.2.2:5000';
 
-  static final _headers = {'Content-Type': 'application/json'};
+  static const _headers = {'Content-Type': 'application/json'};
 
   // ─────────────────────────────────────────
-  // ML PREDICTION
+  // ML PREDICTION (WORKING)
   // ─────────────────────────────────────────
 
   static Future<Map<String, dynamic>> predict({
@@ -26,8 +23,8 @@ class ApiService {
       'answers': answers,
     };
 
-    print('[API] POST $url');
-    print('[API] Payload: $payload');
+    print('[ML] POST $url');
+    print('[ML] Payload: $payload');
 
     final res = await http.post(
       url,
@@ -35,8 +32,8 @@ class ApiService {
       body: jsonEncode(payload),
     );
 
-    print('[API] Status: ${res.statusCode}');
-    print('[API] Response: ${res.body}');
+    print('[ML] Status: ${res.statusCode}');
+    print('[ML] Body: ${res.body}');
 
     final data = jsonDecode(res.body);
 
@@ -48,45 +45,138 @@ class ApiService {
   }
 
   // ─────────────────────────────────────────
-  // SYMPTOM LOGS (NODE BACKEND EXPECTED)
+  // SYMPTOM LOGS (NODE BACKEND)
   // ─────────────────────────────────────────
 
   static Future<void> saveSymptomLog(SymptomLog log) async {
-    final url = Uri.parse('$dbBaseUrl/logs');
-
-    final body = log.toMap();
-
-    print('[API] SAVE LOG -> $url');
-    print('[API] LOG DATA: $body');
-
     try {
+      final url = Uri.parse('$dbBaseUrl/logs');
+
+      print('[DB] saveSymptomLog -> $url');
+      print('[DB] data -> ${log.toMap()}');
+
       final res = await http.post(
         url,
         headers: _headers,
-        body: jsonEncode(body),
+        body: jsonEncode(log.toMap()),
       );
 
-      print('[API] LOG STATUS: ${res.statusCode}');
-      print('[API] LOG RESPONSE: ${res.body}');
+      print('[DB] status: ${res.statusCode}');
+      print('[DB] body: ${res.body}');
     } catch (e) {
-      print('[API ERROR] saveSymptomLog failed: $e');
+      print('[DB ERROR] saveSymptomLog: $e');
     }
   }
 
   // ─────────────────────────────────────────
-  // OPTIONAL: READ LOGS
+  // USER API (RESTORED FOR UI COMPILATION)
+  // ─────────────────────────────────────────
+
+  static Future<UserModel?> getUser(String uid) async {
+    try {
+      final res = await http.get(Uri.parse('$dbBaseUrl/users/$uid'));
+      final data = jsonDecode(res.body);
+
+      if (res.statusCode == 200 && data['success'] == true) {
+        return UserModel.fromMap(data['data']);
+      }
+    } catch (e) {
+      print('[DB ERROR] getUser: $e');
+    }
+    return null;
+  }
+
+  static Future<void> updateUser(UserModel user) async {
+    try {
+      final res = await http.put(
+        Uri.parse('$dbBaseUrl/users/${user.uid}'),
+        headers: _headers,
+        body: jsonEncode(user.toMap()),
+      );
+
+      print('[DB] updateUser status: ${res.statusCode}');
+      print('[DB] updateUser body: ${res.body}');
+    } catch (e) {
+      print('[DB ERROR] updateUser: $e');
+    }
+  }
+
+  static Future<void> deleteUser(String uid) async {
+    try {
+      final res = await http.delete(
+        Uri.parse('$dbBaseUrl/users/$uid'),
+      );
+
+      print('[DB] deleteUser status: ${res.statusCode}');
+    } catch (e) {
+      print('[DB ERROR] deleteUser: $e');
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // INSIGHTS (RESTORED)
+  // ─────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> getInsights({
+    required String uid,
+    required String period,
+  }) async {
+    try {
+      final url = Uri.parse('$dbBaseUrl/insights?uid=$uid&period=$period');
+
+      print('[DB] getInsights -> $url');
+
+      final res = await http.get(url);
+      final data = jsonDecode(res.body);
+
+      if (res.statusCode == 200 && data['success'] == true) {
+        return data['data'];
+      }
+    } catch (e) {
+      print('[DB ERROR] getInsights: $e');
+    }
+
+    return {};
+  }
+
+  // ─────────────────────────────────────────
+  // TIPS (RESTORED)
+  // ─────────────────────────────────────────
+
+  static Future<List<LifestyleTip>> getTipsForSymptom(String symptom) async {
+    try {
+      final url = Uri.parse(
+          '$dbBaseUrl/tips/for-symptom?symptom=${Uri.encodeComponent(symptom)}&limit=3');
+
+      print('[DB] getTipsForSymptom -> $url');
+
+      final res = await http.get(url);
+      final data = jsonDecode(res.body);
+
+      if (res.statusCode == 200 && data['success'] == true) {
+        return (data['data'] as List)
+            .map((t) => LifestyleTip.fromMap(t))
+            .toList();
+      }
+    } catch (e) {
+      print('[DB ERROR] getTipsForSymptom: $e');
+    }
+
+    return [];
+  }
+
+  // ─────────────────────────────────────────
+  // OPTIONAL FALLBACK METHODS
   // ─────────────────────────────────────────
 
   static Future<List<SymptomLog>> getUserLogs({
     required String uid,
     String? period,
   }) async {
-    final query = 'uid=$uid${period != null ? '&period=$period' : ''}';
-    final url = Uri.parse('$dbBaseUrl/logs?$query');
-
-    print('[API] GET $url');
-
     try {
+      final query = 'uid=$uid${period != null ? '&period=$period' : ''}';
+      final url = Uri.parse('$dbBaseUrl/logs?$query');
+
       final res = await http.get(url);
       final data = jsonDecode(res.body);
 
@@ -96,44 +186,9 @@ class ApiService {
             .toList();
       }
     } catch (e) {
-      print('[API ERROR] getUserLogs failed: $e');
+      print('[DB ERROR] getUserLogs: $e');
     }
 
     return [];
-  }
-
-  // ─────────────────────────────────────────
-  // STUB: EVERYTHING BELOW DEPENDS ON NODE
-  // KEEP FOR FUTURE BUT SAFE
-  // ─────────────────────────────────────────
-
-  static Future<List<LifestyleTip>> getTips({
-    required String category,
-    List<String>? relatedSymptoms,
-    int limit = 5,
-  }) async {
-    final url = Uri.parse('$dbBaseUrl/tips');
-
-    print('[API] GET $url');
-
-    return [];
-  }
-
-  static Future<List<Clinic>> getClinicsForTests(List<String> tests) async {
-    final url = Uri.parse('$dbBaseUrl/clinics');
-    print('[API] GET $url');
-    return [];
-  }
-
-  static Future<List<ReminderModel>> getReminders(String uid) async {
-    final url = Uri.parse('$dbBaseUrl/reminders');
-    print('[API] GET $url');
-    return [];
-  }
-
-  static Future<UserModel?> getUser(String uid) async {
-    final url = Uri.parse('$dbBaseUrl/users/$uid');
-    print('[API] GET $url');
-    return null;
   }
 }
