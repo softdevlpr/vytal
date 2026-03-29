@@ -30,7 +30,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     _loadUser();
   }
 
-  // ✅ LOAD USER WITHOUT FIREBASE
   Future<void> _loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     final uid = prefs.getString('uid') ?? '';
@@ -71,14 +70,15 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     });
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Profile updated', style: GoogleFonts.poppins()),
-        backgroundColor: AppColors.routineGreen,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Profile updated', style: GoogleFonts.poppins()),
+          backgroundColor: AppColors.routineGreen,
+        ),
+      );
     }
   }
 
-  // ✅ LOGOUT WITHOUT FIREBASE
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('uid');
@@ -89,7 +89,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     }
   }
 
-  // ✅ DELETE ACCOUNT WITHOUT FIREBASE
   Future<void> _deleteAccount() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -98,9 +97,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         title: Text('Delete Account',
             style: GoogleFonts.poppins(color: AppColors.white)),
         content: Text(
-            'This will permanently delete your account and all health data. This cannot be undone.',
-            style: GoogleFonts.poppins(
-                color: AppColors.white54, height: 1.5)),
+          'This will permanently delete your account.',
+          style: GoogleFonts.poppins(
+              color: AppColors.white54, height: 1.5),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -157,7 +157,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               _editMode ? 'Cancel' : 'Edit',
               style: GoogleFonts.poppins(
                   color: AppColors.primary,
-                  fontSize: 14,
                   fontWeight: FontWeight.w600),
             ),
           ),
@@ -190,14 +189,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                       onTap: _deleteAccount,
                     ),
                   ],
-                  const SizedBox(height: 32),
                 ],
               ),
             ),
     );
   }
-
-  // 👇 Rest UI code unchanged (avatar, profile card, etc.)
 
   Widget _avatar() {
     return Column(
@@ -228,5 +224,89 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     );
   }
 
-  // (remaining UI unchanged)
+  Widget _profileCard() {
+    return Card(
+      color: AppColors.card,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            _inputField('Name', _nameController, enabled: _editMode),
+            const SizedBox(height: 12),
+            _inputField('Age', _ageController,
+                enabled: _editMode, isNumber: true),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: _selectedGender,
+              items: ['Male', 'Female', 'Other']
+                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  .toList(),
+              onChanged: _editMode ? (val) => setState(() => _selectedGender = val) : null,
+              decoration: _inputDecoration('Gender'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _inputField(String label, TextEditingController controller,
+      {bool enabled = false, bool isNumber = false}) {
+    return TextField(
+      controller: controller,
+      enabled: enabled,
+      keyboardType:
+          isNumber ? TextInputType.number : TextInputType.text,
+      style: GoogleFonts.poppins(color: AppColors.white),
+      decoration: _inputDecoration(label),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: GoogleFonts.poppins(color: AppColors.white54),
+      filled: true,
+      fillColor: AppColors.background,
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none),
+    );
+  }
+
+  Widget _saveButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _saveProfile,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        child: Text('Save',
+            style: GoogleFonts.poppins(
+                color: Colors.white, fontWeight: FontWeight.w600)),
+      ),
+    );
+  }
+
+  Widget _settingTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      color: AppColors.card,
+      child: ListTile(
+        leading: Icon(icon, color: color),
+        title: Text(label,
+            style: GoogleFonts.poppins(color: AppColors.white)),
+        trailing: const Icon(Icons.arrow_forward_ios,
+            size: 16, color: AppColors.white54),
+        onTap: onTap,
+      ),
+    );
+  }
 }
