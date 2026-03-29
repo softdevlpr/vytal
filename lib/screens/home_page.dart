@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
                 title: "Daily Tips",
                 subtitle: "Get relevant health tips",
                 icon: Icons.calendar_today,
-                page: LifestylePage(),
+                page: PlanPage(),
               ),
 
               const SizedBox(height: 12),
