@@ -1,141 +1,64 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
-import 'screens/login_page.dart';
-import 'screens/onboarding_page.dart';
-import 'screens/home_page.dart';
-import 'screens/plan_page.dart';
-import 'screens/insights_page.dart';
-import 'screens/add_symptoms_page.dart';
-import 'screens/profile_settings_page.dart';
-
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+import 'data/app_constants.dart';
+import 'services/notification_service.dart';
+import 'services/auth_service.dart';
+import 'providers/user_provider.dart';
+import 'pages/splash_page.dart';
+import 'pages/login_page.dart';
+import 'pages/signup_page.dart';
+import 'pages/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-
-  const InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-  );
-
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-
   tz.initializeTimeZones();
-
-  runApp(const MyApp());
+  await Firebase.initializeApp();
+  await NotificationService.init();
+  runApp(const CardiacApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class CardiacApp extends StatelessWidget {
+  const CardiacApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0F011E),
-      ),
-
-      home: OnboardingPage(),
-    );
-  }
-}
-
-/// 🔥 MAIN NAV CONTROLLER (USED AFTER LOGIN)
-class BottomNavController extends StatefulWidget {
-  const BottomNavController({super.key});
-
-  @override
-  State<BottomNavController> createState() => _BottomNavControllerState();
-}
-
-class _BottomNavControllerState extends State<BottomNavController> {
-  int currentIndex = 0;
-
-  /// 🔥 ALL PAGES
-  final List<Widget> pages = [
-    const HomePage(),
-    const PlanPage(),
-    const AddSymptomsPage(),
-    const InsightsPage(),
-    const ProfileSettingsPage(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F011E),
-
-      /// 🔥 PAGE SWITCH
-      body: pages[currentIndex],
-
-      /// 🔥 CUSTOM BOTTOM NAV
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        color: const Color(0xFF1E1E2C),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            navItem(Icons.home, "Home", 0),
-            navItem(Icons.check_circle, "Plan", 1),
-
-            /// ➕ CENTER BUTTON
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  currentIndex = 2;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-                child: const Icon(Icons.add, color: Colors.black),
-              ),
-            ),
-
-            navItem(Icons.bar_chart, "Insights", 3),
-            navItem(Icons.person, "Profile", 4),
-          ],
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Cardiac Care',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          scaffoldBackgroundColor: AppColors.background,
+          colorScheme: const ColorScheme.dark(
+            primary: AppColors.primary,
+            background: AppColors.background,
+          ),
+          textTheme: GoogleFonts.poppinsTextTheme(
+            ThemeData.dark().textTheme,
+          ),
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.iOS:     CupertinoPageTransitionsBuilder(),
+            },
+          ),
         ),
-      ),
-    );
-  }
-
-  /// 🔥 NAV ITEM
-  Widget navItem(IconData icon, String label, int index) {
-    final isSelected = currentIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          currentIndex = index;
-        });
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? const Color(0xFF9D4EDD) : Colors.white54,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: isSelected ? const Color(0xFF9D4EDD) : Colors.white54,
-            ),
-          ),
-        ],
+        initialRoute: '/splash',
+        routes: {
+          '/splash':  (_) => const SplashPage(),
+          '/login':   (_) => const LoginPage(),
+          '/signup':  (_) => const SignupPage(),
+          '/home':    (_) => const HomePage(),
+        },
       ),
     );
   }
