@@ -14,7 +14,7 @@ const insightRoutes     = require("./routes/insightRoutes");
 const tipRoutes         = require("./routes/tipRoutes");
 const clinicRoutes      = require("./routes/clinicRoutes");
 const userRoutes        = require("./routes/userRoutes");
-const scoreRoutes = require("./routes/scoreRoutes");
+
 
 connectDB();
 
@@ -35,7 +35,7 @@ app.use("/api/insights",  insightRoutes);
 app.use("/api/tips",      tipRoutes);
 app.use("/api/clinics",   clinicRoutes);
 app.use("/api/users",     userRoutes);
-app.use("/api/score", scoreRoutes);
+
 
 // Test route
 app.get("/", (req, res) => {
