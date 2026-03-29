@@ -27,7 +27,7 @@ class _HomePageState extends State<HomePage> {
     switch (index) {
       case 1:
         Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const PlanPage()));
+            MaterialPageRoute(builder: (_) => const LifestylePage()));
         break;
       case 2:
         Navigator.push(context,
@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
                 title: "Daily Tips",
                 subtitle: "Get relevant health tips",
                 icon: Icons.calendar_today,
-                page: const PlanPage(),
+                page: LifestylePage(),
               ),
 
               const SizedBox(height: 12),
@@ -117,6 +117,36 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget navItem(IconData icon, String label, int index) {
+    final isSelected = currentIndex == index;
+
+    return GestureDetector(
+      onTap: () => handleNavigation(index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected
+                ? const Color(0xFF9D4EDD)
+                : Colors.white54,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: isSelected
+                  ? const Color(0xFF9D4EDD)
+                  : Colors.white54,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _profileHeader(BuildContext context) {
@@ -158,7 +188,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// AFFIRMATION
   Widget _dailyAffirmation() {
     return Container(
       width: double.infinity,
@@ -196,7 +225,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// NAV CARD
   Widget _navigationCard(
     BuildContext context, {
     required String title,
