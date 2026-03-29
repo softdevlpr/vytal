@@ -4,7 +4,7 @@ const axios = require("axios");
 // POST /api/predict
 // Forwards request to Flask ML service (port 5000)
 const predict = async (req, res) => {
-  const { answers = {} } = req.body || {};
+  const { primary_symptom = "", answers = {} } = req.body || {};
 
   // Validate input
   if (Object.keys(answers).length < 6) {
