@@ -19,7 +19,7 @@ const predict = async (req, res) => {
 
     // Call Flask API
     const response = await axios.post(
-      "http://127.0.0.1:8000/predict",
+      "http://127.0.0.1:8000/ml-predict",
       { answers }
     );
 
