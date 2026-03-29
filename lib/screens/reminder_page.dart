@@ -236,7 +236,8 @@ class _ReminderPageState extends State<ReminderPage> {
         backgroundColor: const Color(0xFF0F011E),
         title: Text(
           "Set Reminder",
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white),
+            
         ),
       ),
       body: Padding(
