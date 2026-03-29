@@ -15,7 +15,6 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-
   int currentIndex = 0;
 
   final List<Widget> pages = [
@@ -30,21 +29,16 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F011E),
-
       body: pages[currentIndex],
-
-      /// 🔥 FIXED BOTTOM NAV (ALL PAGES)
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         color: const Color(0xFF1E1E2C),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-
             navItem(Icons.home, "Home", 0),
             navItem(Icons.check_circle, "Tips", 1),
 
-            /// ➕ CENTER BUTTON
             GestureDetector(
               onTap: () {
                 setState(() {
