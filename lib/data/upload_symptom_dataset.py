@@ -72,7 +72,7 @@ def build_tests(row):
     tests = []
 
     for i in range(1, 7):
-        test_name_col = f"Recommend Test {i}"
+        test_name_col = f"Recommended Test {i}"
         test_desc_col = f"Test {i} Description"
 
         test_name = row.get(test_name_col)
