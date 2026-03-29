@@ -133,20 +133,30 @@ class ApiService {
   }
 
   // ─────────────────────────────
-  // TIPS (MULTI SUPPORT + LIMIT ✅)
+  // TIPS (🔥 PERSONALIZED FIX)
   // ─────────────────────────────
   static Future<List<LifestyleTip>> getTips({
+    String? uid, // ✅ ADDED FOR PERSONALIZATION
     String? category,
     List<String>? symptoms,
-    int limit = 5, // ✅ added
+    int limit = 5,
   }) async {
     try {
       String query = '';
 
-      if (category != null) {
-        query = 'category=${Uri.encodeComponent(category)}';
+      // ✅ UID → PERSONALIZATION
+      if (uid != null && uid.isNotEmpty) {
+        query = 'uid=${Uri.encodeComponent(uid)}';
       }
 
+      // category (optional)
+      if (category != null) {
+        query = query.isEmpty
+            ? 'category=${Uri.encodeComponent(category)}'
+            : '$query&category=${Uri.encodeComponent(category)}';
+      }
+
+      // symptoms (optional fallback)
       if (symptoms != null && symptoms.isNotEmpty) {
         final symQuery = symptoms
             .map((s) => 'symptoms=${Uri.encodeComponent(s)}')
@@ -156,7 +166,7 @@ class ApiService {
       }
 
       final res = await http.get(
-        Uri.parse('$dbBaseUrl/tips?$query&limit=$limit'), // ✅ added
+        Uri.parse('$dbBaseUrl/tips?$query&limit=$limit'),
       );
 
       final data = jsonDecode(res.body);
@@ -174,7 +184,7 @@ class ApiService {
   }
 
   // ─────────────────────────────
-  // TIPS (SINGLE SYMPTOM ✅ FIXED)
+  // TIPS (SINGLE SYMPTOM - KEEP FOR DEBUG)
   // ─────────────────────────────
   static Future<List<LifestyleTip>> getTipsForSymptom(
       String symptom) async {
@@ -200,7 +210,7 @@ class ApiService {
   }
 
   // ─────────────────────────────
-  // CLINICS (MODEL FIX ✅)
+  // CLINICS
   // ─────────────────────────────
   static Future<List<Clinic>> getClinicsForTests(
       List<String> tests) async {
@@ -216,7 +226,7 @@ class ApiService {
 
       if (res.statusCode == 200 && data['success'] == true) {
         return (data['data'] as List)
-            .map((e) => Clinic.fromMap(e)) // ✅ FIXED
+            .map((e) => Clinic.fromMap(e))
             .toList();
       }
     } catch (e) {
