@@ -1,26 +1,27 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 import 'data/app_constants.dart';
 import 'services/notification_service.dart';
-import 'services/auth_service.dart';
 import 'providers/user_provider.dart';
+
+// Screens
 import 'screens/onboarding_page.dart';
 import 'screens/login_page.dart';
 import 'screens/register_page.dart';
-import 'screens/home_page.dart';
+import 'screens/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize timezone (for notifications)
   tz.initializeTimeZones();
-  await Firebase.initializeApp();
+
+  // Initialize local notifications
   await NotificationService.init();
+
   runApp(const CardiacApp());
 }
 
@@ -36,6 +37,7 @@ class CardiacApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Vytal App - Your Health Matters',
         debugShowCheckedModeBanner: false,
+
         theme: ThemeData(
           scaffoldBackgroundColor: AppColors.background,
           colorScheme: const ColorScheme.dark(
@@ -48,16 +50,20 @@ class CardiacApp extends StatelessWidget {
           pageTransitionsTheme: const PageTransitionsTheme(
             builders: {
               TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-              TargetPlatform.iOS:     CupertinoPageTransitionsBuilder(),
+              TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
             },
           ),
         ),
+
         initialRoute: '/onboarding',
+
         routes: {
-          '/splash':  (_) => const OnboardingPage(),
-          '/login':   (_) => const LoginPage(),
-          '/signup':  (_) => const RegisterPage(),
-          '/home':    (_) => const HomePage(),
+          '/onboarding': (_) => const OnboardingPage(),
+          '/login': (_) => const LoginPage(),
+          '/signup': (_) => const RegisterPage(),
+
+          // MAIN APP ENTRY (after login)
+          '/home': (_) => const MainScreen(),
         },
       ),
     );
