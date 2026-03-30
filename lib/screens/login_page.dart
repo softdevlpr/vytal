@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import 'register_page.dart';
-import 'reset_password_page.dart'; // ✅ ADD THIS FILE
+import 'reset_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -95,7 +95,7 @@ class _LoginPageState extends State<LoginPage> {
                     isPassword: true,
                   ),
 
-                  /// 🔥 FORGOT PASSWORD (UPDATED)
+                  /// 🔥 FORGOT PASSWORD
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -211,7 +211,6 @@ class _LoginPageState extends State<LoginPage> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -232,12 +231,12 @@ class _LoginPageState extends State<LoginPage> {
     if (emailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => BottomNavController()),
+        MaterialPageRoute(builder: (_) => const BottomNavController()),
       );
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Enter email & password")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Enter email & password")),
+      );
     }
   }
 
@@ -257,7 +256,6 @@ class _LoginPageState extends State<LoginPage> {
         hintText: hint,
         hintStyle: GoogleFonts.poppins(color: Colors.white54),
         prefixIcon: Icon(icon, color: Colors.white70),
-
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
@@ -271,11 +269,9 @@ class _LoginPageState extends State<LoginPage> {
                 },
               )
             : null,
-
         filled: true,
         fillColor: Colors.white.withOpacity(0.05),
         contentPadding: const EdgeInsets.symmetric(vertical: 18),
-
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
