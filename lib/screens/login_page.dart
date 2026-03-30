@@ -24,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Stack(
         children: [
+          /// 🔥 Background Image
           SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -33,13 +34,14 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
+          /// 🔥 Dark Gradient Overlay
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.black.withOpacity(0.7),
-                  Colors.black.withOpacity(0.4),
-                  Colors.black.withOpacity(0.7),
+                  Colors.black.withOpacity(0.75),
+                  Colors.black.withOpacity(0.5),
+                  Colors.black.withOpacity(0.75),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -47,24 +49,38 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
+          /// 🔥 Content
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 60),
 
+                  /// 🔥 Title
                   Text(
-                    "Welcome Back",
+                    "Welcome Back 👋",
                     style: GoogleFonts.poppins(
-                      fontSize: 30,
+                      fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFFB388FF),
                     ),
                   ),
 
+                  const SizedBox(height: 8),
+
+                  Text(
+                    "Login to continue",
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                  ),
+
                   const SizedBox(height: 40),
 
+                  /// Email Field
                   _inputField(
                     hint: "Email",
                     controller: emailController,
@@ -73,6 +89,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 16),
 
+                  /// Password Field
                   _inputField(
                     hint: "Password",
                     controller: passwordController,
@@ -81,12 +98,91 @@ class _LoginPageState extends State<LoginPage> {
                     isPassword: true,
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
 
-                  ElevatedButton(
-                    onPressed: _login,
-                    child: const Text("Login"),
+                  /// Forgot Password
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const ResetPasswordPage(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        "Forgot Password?",
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFFB388FF),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
                   ),
+
+                  const SizedBox(height: 10),
+
+                  /// Login Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFB388FF),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 5,
+                      ),
+                      child: Text(
+                        "Login",
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  /// Register Redirect
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: GoogleFonts.poppins(
+                          color: Colors.white70,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const RegisterPage(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "Register",
+                          style: GoogleFonts.poppins(
+                            color: const Color(0xFFB388FF),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -95,7 +191,8 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-  
+
+  /// ✅ LOGIN FUNCTION (UNCHANGED)
   void _login() async {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
@@ -127,13 +224,14 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // ✅ ADDED (was missing)
+  /// ✅ SNACKBAR (UNCHANGED)
   void _showMessage(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg)),
     );
   }
 
+  /// 🔥 INPUT FIELD (UI IMPROVED ONLY)
   Widget _inputField({
     required String hint,
     required TextEditingController controller,
@@ -149,6 +247,7 @@ class _LoginPageState extends State<LoginPage> {
         hintText: hint,
         hintStyle: GoogleFonts.poppins(color: Colors.white54),
         prefixIcon: Icon(icon, color: Colors.white70),
+
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
@@ -164,10 +263,15 @@ class _LoginPageState extends State<LoginPage> {
                 },
               )
             : null,
+
         filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
+        fillColor: Colors.white.withOpacity(0.08),
+
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
       ),
