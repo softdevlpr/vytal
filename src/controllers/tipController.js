@@ -67,7 +67,7 @@ const getTips = async (req, res) => {
           const matchedIds = matched.map((m) => m._id);
 
           const rest = await db
-            .collection("lifestyle_tips")
+            .collection("tips")
             .find({
               ...baseQuery,
               _id: { $nin: matchedIds },
@@ -104,7 +104,7 @@ const getTips = async (req, res) => {
     console.log("[DEBUG] Final Mongo Query:", JSON.stringify(query));
 
     let tips = await db
-      .collection("lifestyle_tips")
+      .collection("tips")
       .find(query)
       .limit(limit)
       .toArray();
@@ -118,7 +118,7 @@ const getTips = async (req, res) => {
       console.log("[STEP] No tips found → using fallback");
 
       tips = await db
-        .collection("lifestyle_tips")
+        .collection("tips")
         .find(baseQuery)
         .limit(limit)
         .toArray();
@@ -151,7 +151,7 @@ const getTipsForSymptom = async (req, res) => {
     console.log("Symptom:", symptom);
 
     const tips = await db
-      .collection("lifestyle_tips")
+      .collection("tips")
       .find({
         symptoms: {
           $in: [new RegExp(`^${symptom}$`, "i")],
