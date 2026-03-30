@@ -47,7 +47,7 @@ const getTips = async (req, res) => {
           );
 
           const matched = await db
-            .collection("lifestyle_tips")
+            .collection("tips")
             .find({
               ...baseQuery,
               symptoms: { $in: regexArray },
