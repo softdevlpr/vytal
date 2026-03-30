@@ -1,132 +1,186 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/api_service.dart';
-import 'login_page.dart';
-import 'main_screen.dart';
+import '../main.dart';
+import 'register_page.dart';
+import 'reset_password_page.dart'; // ✅ ADD THIS FILE
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController ageController = TextEditingController();
+class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  String? selectedGender;
-  bool isLoading = false;
-
-  @override
-  void dispose() {
-    nameController.dispose();
-    ageController.dispose();
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
+  bool isPasswordHidden = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          Image.asset(
-            "assets/images/onboarding2.jpg",
-            fit: BoxFit.cover,
+          /// 🔥 BACKGROUND IMAGE
+          SizedBox(
             width: double.infinity,
             height: double.infinity,
+            child: Image.asset(
+              "assets/images/onboarding2.jpg",
+              fit: BoxFit.cover,
+            ),
           ),
 
+          /// 🔥 DARK OVERLAY
           Container(
-            color: Colors.black.withOpacity(0.6),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black.withOpacity(0.7),
+                  Colors.black.withOpacity(0.4),
+                  Colors.black.withOpacity(0.7),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
           ),
 
+          /// 🔥 CONTENT
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 60),
 
+                  /// 🔥 TITLE
                   Text(
-                    "Create Account",
+                    "Welcome Back",
                     style: GoogleFonts.poppins(
-                      fontSize: 28,
-                      color: Colors.white,
+                      fontSize: 30,
                       fontWeight: FontWeight.bold,
+                      color: const Color(0xFFB388FF),
                     ),
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 6),
 
-                  _input(nameController, "Full Name"),
-                  _input(ageController, "Age", isNumber: true),
+                  Text(
+                    "Login to continue 💜",
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                  ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 40),
 
-                  DropdownButtonFormField<String>(
-                    value: selectedGender,
-                    dropdownColor: Colors.black,
-                    style: const TextStyle(color: Colors.white),
-                    hint: const Text("Gender",
-                        style: TextStyle(color: Colors.white54)),
-                    items: const [
-                      DropdownMenuItem(value: "Male", child: Text("Male")),
-                      DropdownMenuItem(value: "Female", child: Text("Female")),
-                      DropdownMenuItem(value: "Other", child: Text("Other")),
-                    ],
-                    onChanged: (val) => setState(() => selectedGender = val),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.1),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  /// EMAIL
+                  _inputField(
+                    hint: "Email",
+                    controller: emailController,
+                    icon: Icons.email_outlined,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  /// PASSWORD
+                  _inputField(
+                    hint: "Password",
+                    controller: passwordController,
+                    icon: Icons.lock_outline,
+                    obscure: isPasswordHidden,
+                    isPassword: true,
+                  ),
+
+                  /// 🔥 FORGOT PASSWORD (UPDATED)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _showForgotDialog,
+                      child: Text(
+                        "Forgot Password?",
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFFB388FF),
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ),
-
-                  _input(emailController, "Email"),
-                  _input(passwordController, "Password", isPassword: true),
 
                   const SizedBox(height: 20),
 
-                  SizedBox(
+                  /// 🔥 LOGIN BUTTON
+                  Container(
                     width: double.infinity,
-                    height: 50,
+                    height: 55,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF7F00FF), Color(0xFFE100FF)],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.purple.withOpacity(0.6),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
                     child: ElevatedButton(
-                      onPressed: isLoading ? null : _register,
+                      onPressed: _login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purpleAccent,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text("Register"),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const LoginPage(),
+                      child: Text(
+                        "Login",
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
                         ),
-                      );
-                    },
-                    child: const Text(
-                      "Already have account? Login",
-                      style: TextStyle(color: Colors.white70),
+                      ),
                     ),
                   ),
+
+                  const Spacer(),
+
+                  /// 🔥 REGISTER LINK
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account?",
+                        style: GoogleFonts.poppins(color: Colors.white60),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterPage(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "Register",
+                          style: GoogleFonts.poppins(
+                            color: const Color(0xFFB388FF),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -136,72 +190,97 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _input(TextEditingController controller, String hint,
-      {bool isNumber = false, bool isPassword = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: TextField(
-        controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        obscureText: isPassword,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.white54),
-          filled: true,
-          fillColor: Colors.white.withOpacity(0.1),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+  /// 🔥 FORGOT PASSWORD DIALOG
+  void _showForgotDialog() {
+    TextEditingController emailCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Reset Password"),
+          content: TextField(
+            controller: emailCtrl,
+            decoration: const InputDecoration(hintText: "Enter your email"),
           ),
-        ),
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ResetPasswordPage(email: emailCtrl.text),
+                  ),
+                );
+              },
+              child: const Text("Send"),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  void _register() async {
-    if (nameController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        passwordController.text.isEmpty) {
-      _show("Please fill required fields");
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    try {
-      final res = await ApiService.register(
-        name: nameController.text.trim(),
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+  /// 🔥 LOGIN FUNCTION
+  void _login() {
+    if (emailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => BottomNavController()),
       );
-
-      print("REGISTER RESPONSE: $res");
-
-      // ✅ CHECK VALID RESPONSE
-      if (res['_id'] != null) {
-        if (!mounted) return;
-
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-          (route) => false,
-        );
-      } else {
-        _show("Registration failed");
-      }
-
-    } catch (e) {
-      print("REGISTER ERROR: $e");
-      _show(e.toString());
-    }
-
-    if (mounted) {
-      setState(() => isLoading = false);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Enter email & password")));
     }
   }
 
-  void _show(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+  /// 🔥 INPUT FIELD
+  Widget _inputField({
+    required String hint,
+    required TextEditingController controller,
+    required IconData icon,
+    bool obscure = false,
+    bool isPassword = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: GoogleFonts.poppins(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.poppins(color: Colors.white54),
+        prefixIcon: Icon(icon, color: Colors.white70),
+
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  isPasswordHidden ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.white70,
+                ),
+                onPressed: () {
+                  setState(() {
+                    isPasswordHidden = !isPasswordHidden;
+                  });
+                },
+              )
+            : null,
+
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.05),
+        contentPadding: const EdgeInsets.symmetric(vertical: 18),
+
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
   }
 }
