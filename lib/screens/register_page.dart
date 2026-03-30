@@ -25,7 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       body: Stack(
         children: [
-          ///  BACKGROUND IMAGE (SAME AS ONBOARDING)
+        
           SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -35,7 +35,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
 
-          /// DARK OVERLAY
+        
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -58,7 +58,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: [
                   const SizedBox(height: 40),
 
-                  ///  TITLE
                   Text(
                     "Create Account",
                     style: GoogleFonts.poppins(
@@ -80,7 +79,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 40),
 
-                  ///  INPUTS
                   _inputField(
                     controller: nameController,
                     hint: "Full Name",
@@ -98,7 +96,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 16),
 
-                  ///  GENDER DROPDOWN
                   DropdownButtonFormField<String>(
                     dropdownColor: const Color(0xFF1E1E2C),
                     value: selectedGender,
@@ -149,7 +146,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 30),
 
-                  ///  REGISTER BUTTON
                   Container(
                     width: double.infinity,
                     height: 55,
@@ -226,8 +222,8 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-
-  void _register() {
+ 
+  void _register() async {
     if (nameController.text.isEmpty ||
         ageController.text.isEmpty ||
         selectedGender == null ||
@@ -236,39 +232,33 @@ class _RegisterPageState extends State<RegisterPage> {
       _showMessage("Please fill all fields");
       return;
     }
+
     try {
-    final response = await http.post(
-      Uri.parse("http://10.0.2.2:3000/api/auth/register"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "name": nameController.text.trim(),
-        "email": emailController.text.trim(),
-        "password": passwordController.text.trim(),
-      }),
-    );
-
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode == 201) {
-      _showMessage("Registered successfully");
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:3000/api/auth/register"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "name": nameController.text.trim(),
+          "email": emailController.text.trim(),
+          "password": passwordController.text.trim(),
+        }),
       );
-    } else {
-      _showMessage(data["message"] ?? "Registration failed");
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        _showMessage("Registered successfully");
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      } else {
+        _showMessage(data["message"] ?? "Registration failed");
+      }
+    } catch (e) {
+      _showMessage("Server error");
     }
-  } catch (e) {
-    _showMessage("Server error");
-  }
-}
-
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const HomePage()),
-    );
   }
 
   void _showMessage(String msg) {
@@ -277,7 +267,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  
   Widget _inputField({
     required TextEditingController controller,
     required String hint,
