@@ -14,14 +14,23 @@ const getTips = async (req, res) => {
     const { category = "", symptoms = "", uid = "" } = req.query;
     const limit = parseInt(req.query.limit) || 5;
 
-    console.log(`\n[getTips] → category: "${category}", uid: "${uid}", limit: ${limit}`);
+    console.log("\n==================== GET TIPS ====================");
+    console.log("Query Params:", { category, symptoms, uid, limit });
 
     const baseQuery = {};
     if (category) baseQuery.category = category;
 
-   
+    // ─────────────────────────────────────────
+    // PERSONALIZED (UID BASED)
+    // ─────────────────────────────────────────
     if (uid) {
-      const user = await db.collection("users").findOne({ uid });
+      console.log("[STEP] Checking personalized tips...");
+
+      const user = await db.collection("users").findOne({
+        _id: uid, // FIXED
+      });
+
+      console.log("[DEBUG] User found:", user ? "YES" : "NO");
 
       if (user && user.symptom_scores) {
         const topSyms = Object.entries(user.symptom_scores)
@@ -30,18 +39,23 @@ const getTips = async (req, res) => {
           .slice(0, 3)
           .map(([sym]) => sym);
 
-        console.log(`[getTips] top symptoms: ${JSON.stringify(topSyms)}`);
+        console.log("[DEBUG] Top symptoms:", topSyms);
 
         if (topSyms.length) {
-          //use exact match instead of regex
+          const regexArray = topSyms.map(
+            (s) => new RegExp(`^${s}$`, "i")
+          );
+
           const matched = await db
             .collection("lifestyle_tips")
             .find({
               ...baseQuery,
-              symptoms: { $in: topSyms },
+              symptoms: { $in: regexArray },
             })
             .limit(limit)
             .toArray();
+
+          console.log("[DEBUG] Personalized matched:", matched.length);
 
           if (matched.length >= limit) {
             return res.json({
@@ -61,6 +75,8 @@ const getTips = async (req, res) => {
             .limit(limit - matched.length)
             .toArray();
 
+          console.log("[DEBUG] Fallback tips added:", rest.length);
+
           return res.json({
             success: true,
             data: [...matched, ...rest].map(clean),
@@ -69,64 +85,90 @@ const getTips = async (req, res) => {
       }
     }
 
- 
+    // ─────────────────────────────────────────
+    // NORMAL FLOW (NO UID)
+    // ─────────────────────────────────────────
     let query = { ...baseQuery };
 
     if (symptoms) {
       const symList = symptoms.split(",").map((s) => s.trim());
 
-      // use $in instead of regex
-      query.symptoms = { $in: symList };
+      console.log("[STEP] Filtering by symptoms:", symList);
+
+      // FIX: CASE-INSENSITIVE MATCH
+      query.symptoms = {
+        $in: symList.map((s) => new RegExp(`^${s}$`, "i")),
+      };
     }
 
-    console.log(`[getTips] final query: ${JSON.stringify(query)}`);
+    console.log("[DEBUG] Final Mongo Query:", JSON.stringify(query));
 
-    const tips = await db
+    let tips = await db
       .collection("lifestyle_tips")
       .find(query)
       .limit(limit)
       .toArray();
 
-    console.log(`[getTips] returning ${tips.length} tips\n`);
+    console.log("[DEBUG] Matched tips:", tips.length);
+
+    // ─────────────────────────────────────────
+    // FALLBACK IF NO MATCH
+    // ─────────────────────────────────────────
+    if (tips.length === 0) {
+      console.log("[STEP] No tips found → using fallback");
+
+      tips = await db
+        .collection("lifestyle_tips")
+        .find(baseQuery)
+        .limit(limit)
+        .toArray();
+
+      console.log("[DEBUG] Fallback tips:", tips.length);
+    }
+
+    console.log("================================================\n");
 
     res.json({
       success: true,
       data: tips.map(clean),
     });
   } catch (e) {
-    console.error(`[getTips] ERROR: ${e.message}`);
+    console.error("[getTips] ERROR:", e);
     res.status(500).json({ success: false, error: e.message });
   }
 };
 
-
+// ─────────────────────────────────────────
 // GET /api/tips/for-symptom
-
+// ─────────────────────────────────────────
 const getTipsForSymptom = async (req, res) => {
   try {
     const db = getDB();
     const { symptom = "" } = req.query;
     const limit = parseInt(req.query.limit) || 3;
 
-    console.log(`\n[getTipsForSymptom] → symptom: "${symptom}", limit: ${limit}`);
+    console.log("\n=========== GET TIPS FOR SYMPTOM ===========");
+    console.log("Symptom:", symptom);
 
-    //  exact match instead of regex
     const tips = await db
       .collection("lifestyle_tips")
       .find({
-        symptoms: symptom,
+        symptoms: {
+          $in: [new RegExp(`^${symptom}$`, "i")],
+        },
       })
       .limit(limit)
       .toArray();
 
-    console.log(`[getTipsForSymptom] returning ${tips.length} tips\n`);
+    console.log("Tips found:", tips.length);
+    console.log("===========================================\n");
 
     res.json({
       success: true,
       data: tips.map(clean),
     });
   } catch (e) {
-    console.error(`[getTipsForSymptom] ERROR: ${e.message}`);
+    console.error("[getTipsForSymptom] ERROR:", e);
     res.status(500).json({ success: false, error: e.message });
   }
 };
