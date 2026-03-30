@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Stack(
         children: [
-          /// 🔥 Background Image
+       
           SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          /// 🔥 Dark Gradient Overlay
+
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -49,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          /// 🔥 Content
+          
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -58,7 +58,6 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const SizedBox(height: 60),
 
-                  /// 🔥 Title
                   Text(
                     "Welcome Back 👋",
                     style: GoogleFonts.poppins(
@@ -109,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                const ResetPasswordPage(email: emailController.text.trim()),
+                                ResetPasswordPage(email: emailController.text.trim()),
                           ),
                         );
                       },
@@ -192,7 +191,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// ✅ LOGIN FUNCTION (UNCHANGED)
+ 
   void _login() async {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
@@ -224,14 +223,13 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  /// ✅ SNACKBAR (UNCHANGED)
   void _showMessage(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg)),
     );
   }
 
-  /// 🔥 INPUT FIELD (UI IMPROVED ONLY)
+ 
   Widget _inputField({
     required String hint,
     required TextEditingController controller,
