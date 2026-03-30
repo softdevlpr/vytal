@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../main.dart';
 import 'register_page.dart';
 import 'reset_password_page.dart';
 
@@ -214,7 +213,8 @@ class _LoginPageState extends State<LoginPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ResetPasswordPage(email: emailCtrl.text),
+                    builder: (_) =>
+                        ResetPasswordPage(email: emailCtrl.text),
                   ),
                 );
               },
@@ -226,13 +226,11 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// 🔥 LOGIN FUNCTION
+  /// 🔥 LOGIN FUNCTION (FIXED ✅)
   void _login() {
-    if (emailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
-      Navigator.pushReplacement(
-        context,
-        Navigator.pushReplacementNamed(context, '/home');
-      );
+    if (emailController.text.isNotEmpty &&
+        passwordController.text.isNotEmpty) {
+      Navigator.pushReplacementNamed(context, '/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Enter email & password")),
@@ -259,7 +257,9 @@ class _LoginPageState extends State<LoginPage> {
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
-                  isPasswordHidden ? Icons.visibility_off : Icons.visibility,
+                  isPasswordHidden
+                      ? Icons.visibility_off
+                      : Icons.visibility,
                   color: Colors.white70,
                 ),
                 onPressed: () {
@@ -271,7 +271,8 @@ class _LoginPageState extends State<LoginPage> {
             : null,
         filled: true,
         fillColor: Colors.white.withOpacity(0.05),
-        contentPadding: const EdgeInsets.symmetric(vertical: 18),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 18),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
