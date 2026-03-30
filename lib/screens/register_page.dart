@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'home_page.dart';
 import 'login_page.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -187,7 +189,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 20),
 
-                  ///  LOGIN LINK
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -225,7 +226,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// REGISTER LOGIC
+
   void _register() {
     if (nameController.text.isEmpty ||
         ageController.text.isEmpty ||
@@ -235,6 +236,34 @@ class _RegisterPageState extends State<RegisterPage> {
       _showMessage("Please fill all fields");
       return;
     }
+    try {
+    final response = await http.post(
+      Uri.parse("http://10.0.2.2:3000/api/auth/register"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "name": nameController.text.trim(),
+        "email": emailController.text.trim(),
+        "password": passwordController.text.trim(),
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      _showMessage("Registered successfully");
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } else {
+      _showMessage(data["message"] ?? "Registration failed");
+    }
+  } catch (e) {
+    _showMessage("Server error");
+  }
+}
+
 
     Navigator.pushReplacement(
       context,
@@ -248,7 +277,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  ///  INPUT FIELD
+  
   Widget _inputField({
     required TextEditingController controller,
     required String hint,
