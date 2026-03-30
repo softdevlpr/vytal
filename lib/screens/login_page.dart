@@ -109,7 +109,7 @@ class _LoginPageState extends State<LoginPage> {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                const ResetPasswordPage(),
+                                const ResetPasswordPage(email: emailController.text.trim()),
                           ),
                         );
                       },
