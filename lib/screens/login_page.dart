@@ -226,7 +226,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// 🔥 LOGIN FUNCTION (FIXED ✅)
   void _login() {
     if (emailController.text.isNotEmpty &&
         passwordController.text.isNotEmpty) {
@@ -236,9 +235,19 @@ class _LoginPageState extends State<LoginPage> {
         const SnackBar(content: Text("Enter email & password")),
       );
     }
+      final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      _showMessage(data["message"]);
+    }
+  } catch (e) {
+    _showMessage("Server error");
+  }
   }
 
-  /// 🔥 INPUT FIELD
+ 
   Widget _inputField({
     required String hint,
     required TextEditingController controller,
