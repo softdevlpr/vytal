@@ -1,3 +1,5 @@
+// lib/models/models.dart
+
 class UserModel {
   final String uid;
   final String name;
@@ -53,7 +55,7 @@ class UserModel {
       );
 }
 
-
+// ─────────────────────────────────────────────
 class RecommendedTest {
   final int rank;
   final String name;
@@ -70,7 +72,7 @@ class RecommendedTest {
   Map<String, dynamic> toMap() => {'rank': rank, 'name': name, 'description': description};
 }
 
-
+// ─────────────────────────────────────────────
 class SymptomLog {
   final String? id;
   final String uid;
@@ -127,56 +129,63 @@ class SymptomLog {
   }
 }
 
-
+// ─────────────────────────────────────────────
 class LifestyleTip {
   final String id;
   final String category;
-  final String title;
-  final String body;
-  final List<String> relatedSymptoms;
-  final String icon;
+  final String text;         // maps to "text" in MongoDB
+  final List<String> symptoms; // maps to "symptoms" in MongoDB
   final List<String> tags;
 
   LifestyleTip({
     required this.id,
     required this.category,
-    required this.title,
-    required this.body,
-    required this.relatedSymptoms,
-    required this.icon,
+    required this.text,
+    required this.symptoms,
     required this.tags,
   });
 
   factory LifestyleTip.fromMap(Map<String, dynamic> m) => LifestyleTip(
         id: m['_id']?.toString() ?? '',
         category: m['category'] ?? '',
-        title: m['title'] ?? '',
-        body: m['body'] ?? '',
-        relatedSymptoms: List<String>.from(m['related_symptoms'] ?? []),
-        icon: m['icon'] ?? 'lightbulb',
+        text: m['text'] ?? '',
+        symptoms: List<String>.from(m['symptoms'] ?? []),
         tags: List<String>.from(m['tags'] ?? []),
       );
 }
 
-
+// ─────────────────────────────────────────────
 class Clinic {
+  final String id;
   final String name;
   final String address;
   final String phone;
   final List<String> testsAvailable;
+  final String openHours;
+  final String type;
+  final String mapsUrl;
 
   Clinic({
+    required this.id,
     required this.name,
     required this.address,
     required this.phone,
     required this.testsAvailable,
+    this.openHours = '',
+    this.type = '',
+    this.mapsUrl = '',
   });
 
   factory Clinic.fromMap(Map<String, dynamic> m) => Clinic(
+        id: m['_id']?.toString() ?? '',
         name: m['name'] ?? '',
         address: m['address'] ?? '',
-        phone: m['phone_number'] ?? '',
+        // accepts both "phone_number" and "phone" field names
+        phone: m['phone_number'] ?? m['phone'] ?? '',
         testsAvailable: List<String>.from(m['tests_available'] ?? []),
+        openHours: m['open_hours'] ?? '',
+        type: m['type'] ?? '',
+        mapsUrl: m['maps_url'] ?? '',
       );
 }
 
