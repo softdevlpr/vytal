@@ -25,20 +25,17 @@ class _PlanPageState extends State<PlanPage>
     super.initState();
     _tabController = TabController(
         length: kLifestyleCategories.length, vsync: this);
-
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() => _selectedIndex = _tabController.index);
         _loadCategory(kLifestyleCategories[_tabController.index]);
       }
     });
-
     _loadCategory(kLifestyleCategories[0]);
   }
 
   Future<void> _loadCategory(String category) async {
     if (_tipsByCategory.containsKey(category)) return;
-
     setState(() => _loading[category] = true);
 
     try {
@@ -46,15 +43,12 @@ class _PlanPageState extends State<PlanPage>
         category: category,
         limit: 8,
       );
-
-      print("TIPS for $category: ${tips.map((e) => e.text).toList()}");
-
       setState(() {
         _tipsByCategory[category] = tips;
         _loading[category] = false;
       });
     } catch (e) {
-      print("ERROR LOADING TIPS: $e");
+      print('[ERROR] _loadCategory: $e');
       setState(() => _loading[category] = false);
     }
   }
@@ -74,22 +68,17 @@ class _PlanPageState extends State<PlanPage>
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Daily Tips',
-          style: GoogleFonts.poppins(
-            color: AppColors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: Text('Daily Tips',
+            style: GoogleFonts.poppins(
+                color: AppColors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600)),
       ),
       body: Column(
         children: [
-          /// CATEGORY TABS
+          // Category tabs (horizontal scroll)
           SizedBox(
             height: 44,
             child: ListView.builder(
@@ -99,7 +88,6 @@ class _PlanPageState extends State<PlanPage>
               itemBuilder: (_, i) {
                 final cat = kLifestyleCategories[i];
                 final isSelected = i == _selectedIndex;
-
                 return GestureDetector(
                   onTap: () {
                     _tabController.animateTo(i);
@@ -112,32 +100,29 @@ class _PlanPageState extends State<PlanPage>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      gradient: isSelected ? AppGradients.primary : null,
+                      gradient: isSelected
+                          ? AppGradients.primary
+                          : null,
                       color: isSelected ? null : AppColors.card,
                       borderRadius: BorderRadius.circular(22),
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          kCategoryIcons[cat],
-                          color: isSelected
-                              ? AppColors.white
-                              : AppColors.white54,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          cat,
-                          style: GoogleFonts.poppins(
+                        Icon(kCategoryIcons[cat],
                             color: isSelected
                                 ? AppColors.white
                                 : AppColors.white54,
-                            fontSize: 12,
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                          ),
-                        ),
+                            size: 16),
+                        const SizedBox(width: 6),
+                        Text(cat,
+                            style: GoogleFonts.poppins(
+                                color: isSelected
+                                    ? AppColors.white
+                                    : AppColors.white54,
+                                fontSize: 12,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal)),
                       ],
                     ),
                   ),
@@ -148,30 +133,18 @@ class _PlanPageState extends State<PlanPage>
 
           const SizedBox(height: 16),
 
-          /// TIPS LIST
+          // Tips list
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: kLifestyleCategories.map((cat) {
                 final isLoading = _loading[cat] ?? false;
                 final tips = _tipsByCategory[cat] ?? [];
-
                 if (isLoading) {
                   return const Center(
-                    child:
-                        CircularProgressIndicator(color: AppColors.primary),
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   );
                 }
-
-                if (tips.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      "No tips available",
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                  );
-                }
-
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: tips.length,
@@ -185,7 +158,6 @@ class _PlanPageState extends State<PlanPage>
     );
   }
 
-  /// FIXED TIP CARD
   Widget _tipCard(LifestyleTip tip, int index) {
     final colors = [
       const Color(0xFF9D4EDD),
@@ -194,7 +166,6 @@ class _PlanPageState extends State<PlanPage>
       const Color(0xFFFFB703),
       const Color(0xFFEF476F),
     ];
-
     final accent = colors[index % colors.length];
 
     return Container(
@@ -209,14 +180,14 @@ class _PlanPageState extends State<PlanPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// HEADER
+            // ── HEADER: icon + category ──
             Row(
               children: [
                 Icon(Icons.lightbulb_outline, color: accent, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    tip.category, // FIXED
+                    tip.category,
                     style: GoogleFonts.poppins(
                       color: AppColors.white,
                       fontSize: 14,
@@ -226,24 +197,22 @@ class _PlanPageState extends State<PlanPage>
                 ),
               ],
             ),
-
             const SizedBox(height: 10),
-
-            /// TEXT
+            // ── TIP TEXT ──
             Text(
-              tip.text, // FIXED
+              tip.text,
               style: GoogleFonts.poppins(
                 color: AppColors.white70,
                 fontSize: 13,
                 height: 1.6,
               ),
             ),
-
-            /// SYMPTOMS
+            // ── SYMPTOM TAGS ──
             if (tip.symptoms.isNotEmpty) ...[
               const SizedBox(height: 10),
               Wrap(
                 spacing: 6,
+                runSpacing: 4,
                 children: tip.symptoms
                     .map((s) => Container(
                           padding: const EdgeInsets.symmetric(
@@ -255,9 +224,7 @@ class _PlanPageState extends State<PlanPage>
                           child: Text(
                             s,
                             style: GoogleFonts.poppins(
-                              color: accent,
-                              fontSize: 10,
-                            ),
+                                color: accent, fontSize: 10),
                           ),
                         ))
                     .toList(),
