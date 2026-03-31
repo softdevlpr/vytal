@@ -29,8 +29,7 @@ class _TestResultPageState extends State<TestResultPage> {
   }
 
   Future<void> _loadTips() async {
-    final tips =
-        await ApiService.getTips(uid: widget.log.uid);
+    final tips = await ApiService.getTips(uid: widget.log.uid);
     setState(() {
       _tips = tips;
       _loadingTips = false;
@@ -90,7 +89,7 @@ class _TestResultPageState extends State<TestResultPage> {
             _loadingClinics
                 ? _shimmer(120)
                 : _clinics.isEmpty
-                    ? _emptyState('No clinics found')
+                    ? _emptyState('No clinics found for these tests')
                     : Column(children: _clinics.map(_clinicCard).toList()),
             const SizedBox(height: 32),
           ],
@@ -115,7 +114,8 @@ class _TestResultPageState extends State<TestResultPage> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
                   color: _urgencyColor,
                   borderRadius: BorderRadius.circular(30),
@@ -239,87 +239,83 @@ class _TestResultPageState extends State<TestResultPage> {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(clinic.name,
-                    style: GoogleFonts.poppins(
-                        color: AppColors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600)),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(clinic.type,
-                    style: GoogleFonts.poppins(
-                        color: AppColors.primary, fontSize: 11)),
-              ),
-            ],
+          // Name
+          Text(
+            clinic.name,
+            style: GoogleFonts.poppins(
+                color: AppColors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
+          // Address
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.location_on, color: AppColors.white54, size: 14),
+              const Icon(Icons.location_on,
+                  color: AppColors.white54, size: 14),
               const SizedBox(width: 4),
               Expanded(
-                child: Text(clinic.address,
-                    style: GoogleFonts.poppins(
-                        color: AppColors.white54, fontSize: 12)),
+                child: Text(
+                  clinic.address,
+                  style: GoogleFonts.poppins(
+                      color: AppColors.white54, fontSize: 12, height: 1.4),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const Icon(Icons.access_time, color: AppColors.white54, size: 14),
-              const SizedBox(width: 4),
-              Text(clinic.openHours,
-                  style: GoogleFonts.poppins(
-                      color: AppColors.white54, fontSize: 12)),
-            ],
+          const SizedBox(height: 10),
+          // Tests available chips
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: clinic.testsAvailable
+                .map(
+                  (test) => Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: AppColors.primary.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      test,
+                      style: GoogleFonts.poppins(
+                          color: AppColors.primary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                )
+                .toList(),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _call(clinic.phone),
-                  icon: const Icon(Icons.call, size: 16),
-                  label: Text('Call', style: GoogleFonts.poppins(fontSize: 12)),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                ),
+          // Call button — full width
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _call(clinic.phone),
+              icon: const Icon(Icons.call, size: 16),
+              label: Text(
+                clinic.phone,
+                style: GoogleFonts.poppins(fontSize: 12),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _openMaps(clinic.mapsUrl),
-                  icon: const Icon(Icons.directions, size: 16),
-                  label: Text('Directions',
-                      style: GoogleFonts.poppins(fontSize: 12)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side:
+                    BorderSide(color: AppColors.primary.withOpacity(0.5)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 10),
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -329,13 +325,6 @@ class _TestResultPageState extends State<TestResultPage> {
   Future<void> _call(String phone) async {
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) launchUrl(uri);
-  }
-
-  Future<void> _openMaps(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
   }
 
   Widget _sectionTitle(String title) => Text(title,
