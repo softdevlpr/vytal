@@ -25,29 +25,38 @@ class _PlanPageState extends State<PlanPage>
     super.initState();
     _tabController = TabController(
         length: kLifestyleCategories.length, vsync: this);
+
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() => _selectedIndex = _tabController.index);
         _loadCategory(kLifestyleCategories[_tabController.index]);
       }
     });
+
     _loadCategory(kLifestyleCategories[0]);
   }
 
   Future<void> _loadCategory(String category) async {
     if (_tipsByCategory.containsKey(category)) return;
+
     setState(() => _loading[category] = true);
-    print(ApiService.getTips);
-    final tips = await ApiService.getTips(
-      category: category,
-      // Pass user's top symptoms for personalization
-      // relatedSymptoms: userTopSymptoms,
-      limit: 8,
-    );
-    setState(() {
-      _tipsByCategory[category] = tips;
-      _loading[category] = false;
-    });
+
+    try {
+      final tips = await ApiService.getTips(
+        category: category,
+        limit: 8,
+      );
+
+      print("TIPS for $category: ${tips.map((e) => e.text).toList()}");
+
+      setState(() {
+        _tipsByCategory[category] = tips;
+        _loading[category] = false;
+      });
+    } catch (e) {
+      print("ERROR LOADING TIPS: $e");
+      setState(() => _loading[category] = false);
+    }
   }
 
   @override
@@ -69,15 +78,18 @@ class _PlanPageState extends State<PlanPage>
             Navigator.pop(context);
           },
         ),
-        title: Text('Daily Tips',
-            style: GoogleFonts.poppins(
-                color: AppColors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600)),
+        title: Text(
+          'Daily Tips',
+          style: GoogleFonts.poppins(
+            color: AppColors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
       body: Column(
         children: [
-          // Category tabs (horizontal scroll)
+          /// CATEGORY TABS
           SizedBox(
             height: 44,
             child: ListView.builder(
@@ -87,6 +99,7 @@ class _PlanPageState extends State<PlanPage>
               itemBuilder: (_, i) {
                 final cat = kLifestyleCategories[i];
                 final isSelected = i == _selectedIndex;
+
                 return GestureDetector(
                   onTap: () {
                     _tabController.animateTo(i);
@@ -99,29 +112,32 @@ class _PlanPageState extends State<PlanPage>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      gradient: isSelected
-                          ? AppGradients.primary
-                          : null,
+                      gradient: isSelected ? AppGradients.primary : null,
                       color: isSelected ? null : AppColors.card,
                       borderRadius: BorderRadius.circular(22),
                     ),
                     child: Row(
                       children: [
-                        Icon(kCategoryIcons[cat],
+                        Icon(
+                          kCategoryIcons[cat],
+                          color: isSelected
+                              ? AppColors.white
+                              : AppColors.white54,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          cat,
+                          style: GoogleFonts.poppins(
                             color: isSelected
                                 ? AppColors.white
                                 : AppColors.white54,
-                            size: 16),
-                        const SizedBox(width: 6),
-                        Text(cat,
-                            style: GoogleFonts.poppins(
-                                color: isSelected
-                                    ? AppColors.white
-                                    : AppColors.white54,
-                                fontSize: 12,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal)),
+                            fontSize: 12,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -132,18 +148,30 @@ class _PlanPageState extends State<PlanPage>
 
           const SizedBox(height: 16),
 
-          // Tips list
+          /// TIPS LIST
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: kLifestyleCategories.map((cat) {
                 final isLoading = _loading[cat] ?? false;
                 final tips = _tipsByCategory[cat] ?? [];
+
                 if (isLoading) {
                   return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                    child:
+                        CircularProgressIndicator(color: AppColors.primary),
                   );
                 }
+
+                if (tips.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      "No tips available",
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  );
+                }
+
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: tips.length,
@@ -157,6 +185,7 @@ class _PlanPageState extends State<PlanPage>
     );
   }
 
+  /// FIXED TIP CARD
   Widget _tipCard(LifestyleTip tip, int index) {
     final colors = [
       const Color(0xFF9D4EDD),
@@ -165,6 +194,7 @@ class _PlanPageState extends State<PlanPage>
       const Color(0xFFFFB703),
       const Color(0xFFEF476F),
     ];
+
     final accent = colors[index % colors.length];
 
     return Container(
@@ -179,30 +209,42 @@ class _PlanPageState extends State<PlanPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            /// HEADER
             Row(
               children: [
-                Icon(_iconFromString(tip.icon), color: accent, size: 20),
+                Icon(Icons.lightbulb_outline, color: accent, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(tip.title,
-                      style: GoogleFonts.poppins(
-                          color: AppColors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600)),
+                  child: Text(
+                    tip.category, // FIXED
+                    style: GoogleFonts.poppins(
+                      color: AppColors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
+
             const SizedBox(height: 10),
-            Text(tip.body,
-                style: GoogleFonts.poppins(
-                    color: AppColors.white70,
-                    fontSize: 13,
-                    height: 1.6)),
-            if (tip.relatedSymptoms.isNotEmpty) ...[
+
+            /// TEXT
+            Text(
+              tip.text, // FIXED
+              style: GoogleFonts.poppins(
+                color: AppColors.white70,
+                fontSize: 13,
+                height: 1.6,
+              ),
+            ),
+
+            /// SYMPTOMS
+            if (tip.symptoms.isNotEmpty) ...[
               const SizedBox(height: 10),
               Wrap(
                 spacing: 6,
-                children: tip.relatedSymptoms
+                children: tip.symptoms
                     .map((s) => Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 3),
@@ -210,9 +252,13 @@ class _PlanPageState extends State<PlanPage>
                             color: accent.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Text(s,
-                              style: GoogleFonts.poppins(
-                                  color: accent, fontSize: 10)),
+                          child: Text(
+                            s,
+                            style: GoogleFonts.poppins(
+                              color: accent,
+                              fontSize: 10,
+                            ),
+                          ),
                         ))
                     .toList(),
               ),
@@ -221,35 +267,5 @@ class _PlanPageState extends State<PlanPage>
         ),
       ),
     );
-  }
-
-  IconData _iconFromString(String name) {
-    const map = {
-      'water_drop':       Icons.water_drop,
-      'eco':              Icons.eco,
-      'no_food':          Icons.no_food,
-      'smoke_free':       Icons.smoke_free,
-      'no_drinks':        Icons.no_drinks,
-      'restaurant':       Icons.restaurant,
-      'monitor_heart':    Icons.monitor_heart,
-      'directions_walk':  Icons.directions_walk,
-      'assignment':       Icons.assignment,
-      'bedtime':          Icons.bedtime,
-      'apple':            Icons.apple,
-      'trending_up':      Icons.trending_up,
-      'self_improvement': Icons.self_improvement,
-      'chair':            Icons.chair,
-      'air':              Icons.air,
-      'fitness_center':   Icons.fitness_center,
-      'spa':              Icons.spa,
-      'psychology':       Icons.psychology,
-      'people':           Icons.people,
-      'wb_sunny':         Icons.wb_sunny,
-      'timer':            Icons.timer,
-      'restaurant_menu':  Icons.restaurant_menu,
-      'free_breakfast':   Icons.free_breakfast,
-      'alarm':            Icons.alarm,
-    };
-    return map[name] ?? Icons.lightbulb_outline;
   }
 }
