@@ -65,7 +65,7 @@ class _PlanPageState extends State<PlanPage>
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-          onPressed: () => {
+          onPressed: () {
             Navigator.pop(context);
           },
         ),
