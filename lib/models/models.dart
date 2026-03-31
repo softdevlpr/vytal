@@ -1,5 +1,3 @@
-// lib/models/models.dart
-
 class UserModel {
   final String uid;
   final String name;
@@ -55,7 +53,7 @@ class UserModel {
       );
 }
 
-// ─────────────────────────────────────────────
+
 class RecommendedTest {
   final int rank;
   final String name;
@@ -72,7 +70,7 @@ class RecommendedTest {
   Map<String, dynamic> toMap() => {'rank': rank, 'name': name, 'description': description};
 }
 
-// ─────────────────────────────────────────────
+
 class SymptomLog {
   final String? id;
   final String uid;
@@ -129,7 +127,7 @@ class SymptomLog {
   }
 }
 
-// ─────────────────────────────────────────────
+
 class LifestyleTip {
   final String id;
   final String category;
@@ -160,43 +158,25 @@ class LifestyleTip {
       );
 }
 
-// ─────────────────────────────────────────────
+
 class Clinic {
-  final String id;
   final String name;
   final String address;
   final String phone;
-  final double lat;
-  final double lng;
   final List<String> testsAvailable;
-  final String openHours;
-  final String type;
-  final String mapsUrl;
 
   Clinic({
-    required this.id,
     required this.name,
     required this.address,
     required this.phone,
-    required this.lat,
-    required this.lng,
     required this.testsAvailable,
-    required this.openHours,
-    required this.type,
-    required this.mapsUrl,
   });
 
   factory Clinic.fromMap(Map<String, dynamic> m) => Clinic(
-        id: m['_id']?.toString() ?? '',
         name: m['name'] ?? '',
         address: m['address'] ?? '',
-        phone: m['phone'] ?? '',
-        lat: (m['lat'] ?? 0).toDouble(),
-        lng: (m['lng'] ?? 0).toDouble(),
+        phone: m['phone_number'] ?? '',
         testsAvailable: List<String>.from(m['tests_available'] ?? []),
-        openHours: m['open_hours'] ?? '',
-        type: m['type'] ?? '',
-        mapsUrl: m['maps_url'] ?? '',
       );
 }
 
