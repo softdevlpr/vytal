@@ -248,7 +248,7 @@ class _RegisterPageState extends State<RegisterPage> {
       if (response.statusCode == 201) {
         _showMessage("Registered successfully");
 
-        Navigator.pushReplacement(context, '/home');
+        Navigator.pushReplacementNamed(context, '/home');
       } else {
         _showMessage(data["message"] ?? "Registration failed");
       }
