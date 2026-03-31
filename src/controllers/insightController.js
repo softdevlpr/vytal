@@ -1,35 +1,38 @@
 const { getDB } = require("../config/db");
 
-// Format date label
+// Format a YYYY-MM-DD date string into a label based on period
 const formatLabel = (dateStr, period) => {
   const d = new Date(dateStr);
   if (period === "week") {
+    // e.g. "Mon", "Tue"
     return d.toLocaleDateString("en-US", { weekday: "short" });
   }
   if (period === "month") {
+    // e.g. "05 Apr"
     return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
   }
+  // year → e.g. "Jan"
   return d.toLocaleDateString("en-US", { month: "short" });
 };
 
-// Period calculation
+// Build since/prev dates for the requested period
 const getPeriodDates = (period) => {
   const now = new Date();
   if (period === "week") {
     return {
-      since: new Date(now - 7 * 86400000),
-      prev: new Date(now - 14 * 86400000),
+      since: new Date(now - 7   * 86400000),
+      prev:  new Date(now - 14  * 86400000),
     };
   }
   if (period === "month") {
     return {
-      since: new Date(now - 30 * 86400000),
-      prev: new Date(now - 60 * 86400000),
+      since: new Date(now - 30  * 86400000),
+      prev:  new Date(now - 60  * 86400000),
     };
   }
   return {
-    since: new Date(now - 365 * 86400000),
-    prev: new Date(now - 730 * 86400000),
+    since: new Date(now - 365  * 86400000),
+    prev:  new Date(now - 730  * 86400000),
   };
 };
 
@@ -37,80 +40,67 @@ const getPeriodDates = (period) => {
 const getInsights = async (req, res) => {
   try {
     const db = getDB();
+    const { uid, period = "week" } = req.query;
 
-    let { uid, period = "week" } = req.query;
-
-    // ✅ FIX: ensure uid is string
-    uid = String(uid);
-
-    console.log("Incoming UID:", uid);
-    console.log("Period:", period);
-
-    if (!uid || uid === "null" || uid === "undefined") {
-      return res.status(400).json({
-        success: false,
-        error: "valid uid required",
-      });
+    if (!uid) {
+      return res.status(400).json({ success: false, error: "uid required" });
     }
 
     const { since, prev } = getPeriodDates(period);
 
-    // ✅ FILTER BY UID (already correct, kept)
+    // Current period logs
     const logs = await db
       .collection("symptom_logs")
-      .find({
-        uid: uid,
-        logged_at: { $gte: since.toISOString() },
-      })
+      .find({ uid, logged_at: { $gte: since.toISOString() } })
       .toArray();
-
-    console.log("Logs found:", logs.length);
 
     if (!logs.length) {
       return res.json({ success: true, data: {} });
     }
 
-    const symFreq = {};
+    // Aggregate symptom frequency, urgency counts, and daily severity scores
+    const symFreq      = {};
     const urgencyCount = {};
-    const chartByDay = {};
+    const chartByDay   = {};
 
     for (const log of logs) {
-      const sym = log.primary_symptom || "";
+      const sym     = log.primary_symptom || "";
       const urgency = log.urgency || "Routine";
-      const day = (log.logged_at || "").slice(0, 10);
-      const score = log.severity_score || 0;
+      const day     = (log.logged_at || "").slice(0, 10);
+      const score   = log.severity_score || 0;
 
-      symFreq[sym] = (symFreq[sym] || 0) + 1;
+      symFreq[sym]         = (symFreq[sym]         || 0) + 1;
       urgencyCount[urgency] = (urgencyCount[urgency] || 0) + 1;
 
       if (!chartByDay[day]) chartByDay[day] = [];
       chartByDay[day].push(score);
     }
 
+    // Build chart points — one point per day, averaged severity
     const chartPoints = Object.keys(chartByDay)
       .sort()
       .map((day) => {
         const scores = chartByDay[day];
-        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        const avg    = scores.reduce((a, b) => a + b, 0) / scores.length;
         return {
           label: formatLabel(day, period),
-          score: Math.round(avg * 10) / 10,
+          score: Math.round(avg * 10) / 10, // 1 decimal
         };
       });
 
+    // Top symptom by frequency
     const topSymptom = Object.keys(symFreq).length
-      ? Object.keys(symFreq).reduce((a, b) =>
-          symFreq[a] > symFreq[b] ? a : b
-        )
+      ? Object.keys(symFreq).reduce((a, b) => (symFreq[a] > symFreq[b] ? a : b))
       : "None";
 
+    // Previous period logs for improvement comparison
     const prevLogs = await db
       .collection("symptom_logs")
       .find({
-        uid: uid,
+        uid,
         logged_at: {
           $gte: prev.toISOString(),
-          $lt: since.toISOString(),
+          $lt:  since.toISOString(),
         },
       })
       .toArray();
@@ -125,6 +115,7 @@ const getInsights = async (req, res) => {
       improvement = "You had no urgent symptoms this period. Keep it up!";
     }
 
+    // Sort symptom_frequency descending before sending
     const symptomFrequency = Object.fromEntries(
       Object.entries(symFreq).sort((a, b) => b[1] - a[1])
     );
@@ -141,7 +132,6 @@ const getInsights = async (req, res) => {
       },
     });
   } catch (e) {
-    console.error("Insights error:", e);
     res.status(500).json({ success: false, error: e.message });
   }
 };
