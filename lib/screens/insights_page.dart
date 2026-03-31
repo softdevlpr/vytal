@@ -1,9 +1,10 @@
+// lib/pages/insights_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../data/app_constants.dart';
 import '../services/api_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
@@ -13,40 +14,21 @@ class InsightsPage extends StatefulWidget {
 }
 
 class _InsightsPageState extends State<InsightsPage> {
-  String _period = 'week';
+  String _period = 'week'; // week / month / year
   Map<String, dynamic> _data = {};
   bool _loading = true;
-
-  String _uid = '';
+  final String _uid = 'current_user_uid'; // replace with Firebase uid
 
   @override
   void initState() {
     super.initState();
-
-    FirebaseAuth.instance.authStateChanges().listen((user) {
-      if (user != null) {
-        setState(() {
-          _uid = user.uid;
-        });
-        _load();
-      } else {
-        setState(() {
-          _uid = '';
-          _loading = false;
-        });
-        print("User not logged in");
-      }
-    });
+    _load();
   }
 
   Future<void> _load() async {
-    if (_uid.isEmpty) return;
-
     setState(() => _loading = true);
-
     final data =
         await ApiService.getInsights(uid: _uid, period: _period);
-
     setState(() {
       _data = data;
       _loading = false;
@@ -86,6 +68,7 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
+  // ── PERIOD SELECTOR ─────────────────────────────────────────────────────────
   Widget _periodSelector() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -127,6 +110,7 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
+  // ── MAIN CONTENT ────────────────────────────────────────────────────────────
   Widget _insightsContent() {
     final totalLogs = _data['total_logs'] ?? 0;
     final topSymptom = _data['top_symptom'] ?? 'None';
@@ -137,7 +121,9 @@ class _InsightsPageState extends State<InsightsPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Summary cards
           Row(
             children: [
               _summaryCard('Total Logs', '$totalLogs', Icons.bar_chart,
@@ -147,6 +133,159 @@ class _InsightsPageState extends State<InsightsPage> {
                   Icons.favorite_border, AppColors.soonAmber),
             ],
           ),
+          const SizedBox(height: 12),
+
+          // Urgency breakdown
+          Row(
+            children: [
+              _summaryCard('Urgent',
+                  '${urgencyBreakdown['Urgent'] ?? 0}', Icons.warning,
+                  AppColors.urgentRed),
+              const SizedBox(width: 8),
+              _summaryCard('Soon',
+                  '${urgencyBreakdown['Soon'] ?? 0}', Icons.schedule,
+                  AppColors.soonAmber),
+              const SizedBox(width: 8),
+              _summaryCard('Routine',
+                  '${urgencyBreakdown['Routine'] ?? 0}', Icons.check_circle,
+                  AppColors.routineGreen),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Severity trend chart
+          if (chartPoints.isNotEmpty) ...[
+            Text('Severity Trend',
+                style: GoogleFonts.poppins(
+                    color: AppColors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(height: 16),
+            Container(
+              height: 200,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (_) => FlLine(
+                        color: Colors.white10, strokeWidth: 0.5),
+                  ),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 28,
+                        getTitlesWidget: (v, _) => Text('${v.toInt()}',
+                            style: GoogleFonts.poppins(
+                                color: AppColors.white54, fontSize: 10)),
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (v, _) {
+                          final idx = v.toInt();
+                          if (idx < 0 || idx >= chartPoints.length) {
+                            return const SizedBox();
+                          }
+                          return Text(
+                              chartPoints[idx]['label']?.toString() ?? '',
+                              style: GoogleFonts.poppins(
+                                  color: AppColors.white54, fontSize: 9));
+                        },
+                      ),
+                    ),
+                    rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: chartPoints
+                          .asMap()
+                          .entries
+                          .map((e) => FlSpot(e.key.toDouble(),
+                              (e.value['score'] ?? 0).toDouble()))
+                          .toList(),
+                      isCurved: true,
+                      color: AppColors.primary,
+                      barWidth: 2.5,
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: AppColors.primary.withOpacity(0.1),
+                      ),
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (_, __, ___, ____) =>
+                            FlDotCirclePainter(
+                                radius: 3,
+                                color: AppColors.primary,
+                                strokeWidth: 0,
+                                strokeColor: Colors.transparent),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 24),
+
+          // Symptom frequency
+          if ((_data['symptom_frequency'] as Map?)?.isNotEmpty ?? false) ...[
+            Text('Symptom Frequency',
+                style: GoogleFonts.poppins(
+                    color: AppColors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            ...(_data['symptom_frequency'] as Map<String, dynamic>)
+                .entries
+                .toList()
+                .take(6)
+                .map((e) => _frequencyBar(e.key, e.value as int,
+                    (_data['total_logs'] ?? 1) as int)),
+          ],
+
+          const SizedBox(height: 24),
+
+          // Improvement note
+          if (_data['improvement'] != null)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.routineGreen.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                    color: AppColors.routineGreen.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.trending_up,
+                      color: AppColors.routineGreen, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(_data['improvement'],
+                        style: GoogleFonts.poppins(
+                            color: AppColors.routineGreen,
+                            fontSize: 13,
+                            height: 1.5)),
+                  ),
+                ],
+              ),
+            ),
+
+          const SizedBox(height: 32),
         ],
       ),
     );
@@ -170,12 +309,47 @@ class _InsightsPageState extends State<InsightsPage> {
                 style: GoogleFonts.poppins(
                     color: AppColors.white,
                     fontSize: 18,
-                    fontWeight: FontWeight.w700)),
+                    fontWeight: FontWeight.w700),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
             Text(label,
                 style: GoogleFonts.poppins(
                     color: AppColors.white54, fontSize: 11)),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _frequencyBar(String symptom, int count, int total) {
+    final pct = total > 0 ? count / total : 0.0;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(symptom,
+                  style: GoogleFonts.poppins(
+                      color: AppColors.white, fontSize: 12)),
+              Text('$count times',
+                  style: GoogleFonts.poppins(
+                      color: AppColors.white54, fontSize: 11)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: pct,
+              backgroundColor: AppColors.card,
+              color: AppColors.primary,
+              minHeight: 6,
+            ),
+          ),
+        ],
       ),
     );
   }
