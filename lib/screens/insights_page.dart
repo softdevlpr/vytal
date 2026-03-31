@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -25,7 +23,6 @@ class _InsightsPageState extends State<InsightsPage> {
   void initState() {
     super.initState();
 
-    // listen to auth state instead of one-time fetch
     FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
         setState(() {
@@ -89,7 +86,6 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  // ── PERIOD SELECTOR ─────────────────────────────────────────────────────────
   Widget _periodSelector() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -131,4 +127,75 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  // باقي code unchanged...
+  Widget _insightsContent() {
+    final totalLogs = _data['total_logs'] ?? 0;
+    final topSymptom = _data['top_symptom'] ?? 'None';
+    final urgencyBreakdown =
+        Map<String, int>.from(_data['urgency_breakdown'] ?? {});
+    final List<dynamic> chartPoints = _data['chart_points'] ?? [];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _summaryCard('Total Logs', '$totalLogs', Icons.bar_chart,
+                  AppColors.primary),
+              const SizedBox(width: 12),
+              _summaryCard('Top Symptom', topSymptom,
+                  Icons.favorite_border, AppColors.soonAmber),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryCard(
+      String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 8),
+            Text(value,
+                style: GoogleFonts.poppins(
+                    color: AppColors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700)),
+            Text(label,
+                style: GoogleFonts.poppins(
+                    color: AppColors.white54, fontSize: 11)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyState() => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.bar_chart, color: AppColors.white54, size: 60),
+            const SizedBox(height: 16),
+            Text('No data yet',
+                style: GoogleFonts.poppins(
+                    color: AppColors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Text('Log your first symptom to see insights here.',
+                style: GoogleFonts.poppins(
+                    color: AppColors.white54, fontSize: 13)),
+          ],
+        ),
+      );
+}
