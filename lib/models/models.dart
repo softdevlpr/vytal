@@ -20,15 +20,14 @@ class UserModel {
   });
 
   factory UserModel.fromMap(Map<String, dynamic> m) => UserModel(
-        uid: m['_id']?.toString() ?? m['uid'] ?? '',
+        uid: m['uid'] ?? '',
         name: m['name'] ?? '',
         email: m['email'] ?? '',
         age: m['age'],
         gender: m['gender'],
         avatarUrl: m['avatar_url'],
         symptomScores: Map<String, int>.from(m['symptom_scores'] ?? {}),
-        preferredCategories:
-            List<String>.from(m['preferred_categories'] ?? []),
+        preferredCategories: List<String>.from(m['preferred_categories'] ?? []),
       );
 
   Map<String, dynamic> toMap() => {
@@ -42,13 +41,7 @@ class UserModel {
         'preferred_categories': preferredCategories,
       };
 
-  UserModel copyWith({
-    String? name,
-    int? age,
-    String? gender,
-    String? avatarUrl,
-  }) =>
-      UserModel(
+  UserModel copyWith({String? name, int? age, String? gender, String? avatarUrl}) => UserModel(
         uid: uid,
         name: name ?? this.name,
         email: email,
@@ -60,70 +53,23 @@ class UserModel {
       );
 }
 
-// ─────────────────────────────────────────────
-
-class LifestyleTip {
-  final String id;
-  final String category;
-  final String title;
-  final String body;
-  final List<String> relatedSymptoms;
-  final String icon;
-  final List<String> tags;
-
-  LifestyleTip({
-    required this.id,
-    required this.category,
-    required this.title,
-    required this.body,
-    required this.relatedSymptoms,
-    required this.icon,
-    required this.tags,
-  });
-
-  factory LifestyleTip.fromMap(Map<String, dynamic> m) {
-    return LifestyleTip(
-      id: m['_id']?.toString() ?? '',
-      category: m['category'] ?? '',
-
-      title: m['title'] ?? 'Health Tip',
-      body: m['text'] ?? '',
-
-      
-      relatedSymptoms: List<String>.from(m['symptoms'] ?? []),
-
-     
-      icon: m['icon'] ?? 'lightbulb',
-      tags: List<String>.from(m['tags'] ?? []),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
 
 class RecommendedTest {
   final int rank;
   final String name;
   final String description;
 
-  RecommendedTest({
-    required this.rank,
-    required this.name,
-    required this.description,
-  });
+  RecommendedTest({required this.rank, required this.name, required this.description});
 
-  factory RecommendedTest.fromMap(Map<String, dynamic> m) =>
-      RecommendedTest(
+  factory RecommendedTest.fromMap(Map<String, dynamic> m) => RecommendedTest(
         rank: m['rank'] ?? 0,
         name: m['name'] ?? '',
         description: m['description'] ?? '',
       );
 
-  Map<String, dynamic> toMap() =>
-      {'rank': rank, 'name': name, 'description': description};
+  Map<String, dynamic> toMap() => {'rank': rank, 'name': name, 'description': description};
 }
 
-// ─────────────────────────────────────────────
 
 class SymptomLog {
   final String? id;
@@ -156,8 +102,7 @@ class SymptomLog {
             .map((t) => RecommendedTest.fromMap(t))
             .toList(),
         severityScore: m['severity_score'] ?? 0,
-        loggedAt:
-            DateTime.tryParse(m['logged_at'] ?? '') ?? DateTime.now(),
+        loggedAt: DateTime.tryParse(m['logged_at'] ?? '') ?? DateTime.now(),
       );
 
   Map<String, dynamic> toMap() => {
@@ -165,14 +110,54 @@ class SymptomLog {
         'primary_symptom': primarySymptom,
         'answers': answers,
         'urgency': urgency,
-        'recommended_tests':
-            recommendedTests.map((t) => t.toMap()).toList(),
+        'recommended_tests': recommendedTests.map((t) => t.toMap()).toList(),
         'severity_score': severityScore,
         'logged_at': loggedAt.toIso8601String(),
+        'week_number': _isoWeekNumber(loggedAt),
+        'month': loggedAt.month,
+        'year': loggedAt.year,
       };
+
+  static int _isoWeekNumber(DateTime date) {
+    final dayOfYear = int.parse(DateTime(date.year, date.month, date.day)
+            .difference(DateTime(date.year, 1, 1))
+            .inDays
+            .toString()) + 1;
+    return ((dayOfYear - date.weekday + 10) / 7).floor();
+  }
 }
 
-// ─────────────────────────────────────────────
+
+class LifestyleTip {
+  final String id;
+  final String category;
+  final String title;
+  final String body;
+  final List<String> relatedSymptoms;
+  final String icon;
+  final List<String> tags;
+
+  LifestyleTip({
+    required this.id,
+    required this.category,
+    required this.title,
+    required this.body,
+    required this.relatedSymptoms,
+    required this.icon,
+    required this.tags,
+  });
+
+  factory LifestyleTip.fromMap(Map<String, dynamic> m) => LifestyleTip(
+        id: m['_id']?.toString() ?? '',
+        category: m['category'] ?? '',
+        title: m['title'] ?? '',
+        body: m['body'] ?? '',
+        relatedSymptoms: List<String>.from(m['related_symptoms'] ?? []),
+        icon: m['icon'] ?? 'lightbulb',
+        tags: List<String>.from(m['tags'] ?? []),
+      );
+}
+
 
 class Clinic {
   final String name;
@@ -193,4 +178,45 @@ class Clinic {
         phone: m['phone_number'] ?? '',
         testsAvailable: List<String>.from(m['tests_available'] ?? []),
       );
+}
+
+// ─────────────────────────────────────────────
+class ReminderModel {
+  final String? id;
+  final String uid;
+  final String title;
+  final String time;          // "HH:mm"
+  final String repeat;        // daily / weekly / none
+  final List<int> daysOfWeek; // 1=Mon..7=Sun, only for weekly
+  final bool isActive;
+
+  ReminderModel({
+    this.id,
+    required this.uid,
+    required this.title,
+    required this.time,
+    required this.repeat,
+    this.daysOfWeek = const [],
+    this.isActive = true,
+  });
+
+  factory ReminderModel.fromMap(Map<String, dynamic> m) => ReminderModel(
+        id: m['_id']?.toString(),
+        uid: m['uid'] ?? '',
+        title: m['title'] ?? '',
+        time: m['time'] ?? '08:00',
+        repeat: m['repeat'] ?? 'daily',
+        daysOfWeek: List<int>.from(m['days_of_week'] ?? []),
+        isActive: m['is_active'] ?? true,
+      );
+
+  Map<String, dynamic> toMap() => {
+        'uid': uid,
+        'title': title,
+        'time': time,
+        'repeat': repeat,
+        'days_of_week': daysOfWeek,
+        'is_active': isActive,
+        'created_at': DateTime.now().toIso8601String(),
+      };
 }
