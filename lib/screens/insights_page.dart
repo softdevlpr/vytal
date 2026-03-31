@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../data/app_constants.dart';
 import '../services/api_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
@@ -17,18 +18,35 @@ class _InsightsPageState extends State<InsightsPage> {
   String _period = 'week'; // week / month / year
   Map<String, dynamic> _data = {};
   bool _loading = true;
-  final String _uid = 'current_user_uid'; // replace with Firebase uid
+
+  // ✅ CHANGED: dynamic UID
+  String _uid = '';
 
   @override
   void initState() {
     super.initState();
-    _load();
+
+    // ✅ CHANGED: get Firebase user UID
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      _uid = user.uid;
+      _load();
+    } else {
+      print("User not logged in");
+      _loading = false;
+    }
   }
 
   Future<void> _load() async {
+    // ✅ ADDED: safety check
+    if (_uid.isEmpty) return;
+
     setState(() => _loading = true);
+
     final data =
         await ApiService.getInsights(uid: _uid, period: _period);
+
     setState(() {
       _data = data;
       _loading = false;
@@ -123,7 +141,6 @@ class _InsightsPageState extends State<InsightsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Summary cards
           Row(
             children: [
               _summaryCard('Total Logs', '$totalLogs', Icons.bar_chart,
@@ -135,7 +152,6 @@ class _InsightsPageState extends State<InsightsPage> {
           ),
           const SizedBox(height: 12),
 
-          // Urgency breakdown
           Row(
             children: [
               _summaryCard('Urgent',
@@ -154,7 +170,6 @@ class _InsightsPageState extends State<InsightsPage> {
 
           const SizedBox(height: 24),
 
-          // Severity trend chart
           if (chartPoints.isNotEmpty) ...[
             Text('Severity Trend',
                 style: GoogleFonts.poppins(
@@ -241,7 +256,6 @@ class _InsightsPageState extends State<InsightsPage> {
 
           const SizedBox(height: 24),
 
-          // Symptom frequency
           if ((_data['symptom_frequency'] as Map?)?.isNotEmpty ?? false) ...[
             Text('Symptom Frequency',
                 style: GoogleFonts.poppins(
@@ -259,7 +273,6 @@ class _InsightsPageState extends State<InsightsPage> {
 
           const SizedBox(height: 24),
 
-          // Improvement note
           if (_data['improvement'] != null)
             Container(
               padding: const EdgeInsets.all(16),
