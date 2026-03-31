@@ -10,6 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  firebase_core: ^2.30.0
+  firebase_auth: ^4.19.0
+
   # UI & Fonts
   google_fonts: ^6.1.0
   flutter_svg: ^2.0.9
