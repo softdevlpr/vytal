@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'home_page.dart';
 import 'login_page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -249,10 +248,7 @@ class _RegisterPageState extends State<RegisterPage> {
       if (response.statusCode == 201) {
         _showMessage("Registered successfully");
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
+        Navigator.pushReplacement(context, '/home');
       } else {
         _showMessage(data["message"] ?? "Registration failed");
       }
