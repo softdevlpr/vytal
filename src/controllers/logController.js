@@ -18,54 +18,22 @@ const addLog = async (req, res) => {
     const db = getDB();
     const body = req.body || {};
 
-    let { uid, primary_symptom } = body;
+    const { uid, primary_symptom } = body;
 
-    // ✅ FIX: ensure uid is string
-    uid = String(uid);
-
-    console.log("Incoming UID:", uid);
-
-    // ✅ FIX: reject invalid UID
-    if (
-      !uid ||
-      uid === "null" ||
-      uid === "undefined" ||
-      uid === "current_user_uid"
-    ) {
+    if (!uid || !primary_symptom) {
       return res.status(400).json({
         success: false,
-        error: "valid uid required",
+        error: "uid and primary_symptom required",
       });
     }
 
-    if (!primary_symptom) {
-      return res.status(400).json({
-        success: false,
-        error: "primary_symptom required",
-      });
-    }
+    // Save log
+    body.logged_at = new Date().toISOString();
+    await db.collection("symptom_logs").insertOne(body);
 
-    // ✅ FIX: create clean log object instead of inserting raw body
-    const log = {
-      uid: uid,
-      primary_symptom: body.primary_symptom,
-      answers: body.answers || {},
-      urgency: body.urgency || "Routine",
-      recommended_tests: body.recommended_tests || [],
-      severity_score: body.severity_score || 0,
-      logged_at: new Date().toISOString(),
-      week_number: body.week_number,
-      month: body.month,
-      year: body.year,
-    };
-
-    console.log("Saving log:", log);
-
-    await db.collection("symptom_logs").insertOne(log);
-
-    // Update user stats
+    
     await db.collection("users").updateOne(
-      { uid: uid },
+      { uid },
       {
         $inc: {
           [`symptom_scores.${primary_symptom}`]: 1,
@@ -88,11 +56,9 @@ const addLog = async (req, res) => {
 const getLogs = async (req, res) => {
   try {
     const db = getDB();
-    let { uid, period = "week" } = req.query;
+    const { uid, period = "week" } = req.query;
 
-    uid = String(uid);
-
-    if (!uid || uid === "null" || uid === "undefined") {
+    if (!uid) {
       return res.status(400).json({
         success: false,
         error: "uid required",
@@ -103,7 +69,7 @@ const getLogs = async (req, res) => {
 
     const logs = await db
       .collection("symptom_logs")
-      .find({ uid: uid, logged_at: { $gte: since.toISOString() } })
+      .find({ uid, logged_at: { $gte: since.toISOString() } })
       .sort({ logged_at: -1 })
       .toArray();
 
