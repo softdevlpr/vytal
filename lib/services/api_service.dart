@@ -133,10 +133,10 @@ class ApiService {
   }
 
   // ─────────────────────────────
-  // TIPS (🔥 PERSONALIZED FIX)
+  // TIPS
   // ─────────────────────────────
   static Future<List<LifestyleTip>> getTips({
-    String? uid, // ✅ ADDED FOR PERSONALIZATION
+    String? uid,
     String? category,
     List<String>? symptoms,
     int limit = 5,
@@ -144,24 +144,20 @@ class ApiService {
     try {
       String query = '';
 
-      // ✅ UID → PERSONALIZATION
       if (uid != null && uid.isNotEmpty) {
         query = 'uid=${Uri.encodeComponent(uid)}';
       }
 
-      // category (optional)
       if (category != null) {
         query = query.isEmpty
             ? 'category=${Uri.encodeComponent(category)}'
             : '$query&category=${Uri.encodeComponent(category)}';
       }
 
-      // symptoms (optional fallback)
       if (symptoms != null && symptoms.isNotEmpty) {
         final symQuery = symptoms
             .map((s) => 'symptoms=${Uri.encodeComponent(s)}')
             .join('&');
-
         query = query.isEmpty ? symQuery : '$query&$symQuery';
       }
 
@@ -184,7 +180,7 @@ class ApiService {
   }
 
   // ─────────────────────────────
-  // TIPS (SINGLE SYMPTOM - KEEP FOR DEBUG)
+  // TIPS (SINGLE SYMPTOM - DEBUG)
   // ─────────────────────────────
   static Future<List<LifestyleTip>> getTipsForSymptom(
       String symptom) async {
@@ -210,13 +206,13 @@ class ApiService {
   }
 
   // ─────────────────────────────
-  // CLINICS
+  // CLINICS  ← fixed query format
   // ─────────────────────────────
   static Future<List<Clinic>> getClinicsForTests(
       List<String> tests) async {
     try {
-      final query =
-          tests.map((t) => 'tests=${Uri.encodeComponent(t)}').join('&');
+      // sends: /api/clinics?tests=ECG,CBC  (comma-separated, matches controller)
+      final query = 'tests=${tests.map(Uri.encodeComponent).join(',')}';
 
       final res = await http.get(
         Uri.parse('$dbBaseUrl/clinics?$query'),
