@@ -38,8 +38,8 @@ const addLog = async (req, res) => {
         $inc: {
           [`symptom_scores.${primary_symptom}`]: 1,
         },
-      },
-      { upsert: true }
+      }
+      
     );
 
     res.json({
