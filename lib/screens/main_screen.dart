@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-
-// Pages
 import 'home_page.dart';
 import 'plan_page.dart';
 import 'insights_page.dart';
@@ -9,7 +7,6 @@ import 'add_symptoms_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
-
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -17,7 +14,8 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
 
-  final List<Widget> pages = [
+  // Moved to late final so pages are created once and never remounted
+  late final List<Widget> pages = [
     const HomePage(),
     const PlanPage(),
     const AddSymptomsPage(),
@@ -29,7 +27,11 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F011E),
-      body: pages[currentIndex],
+      // IndexedStack keeps all pages alive — they won't remount on tab switch
+      body: IndexedStack(
+        index: currentIndex,
+        children: pages,
+      ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         color: const Color(0xFF1E1E2C),
@@ -38,7 +40,6 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             navItem(Icons.home, "Home", 0),
             navItem(Icons.check_circle, "Tips", 1),
-
             GestureDetector(
               onTap: () {
                 setState(() {
@@ -54,7 +55,6 @@ class _MainScreenState extends State<MainScreen> {
                 child: const Icon(Icons.add, color: Colors.black),
               ),
             ),
-
             navItem(Icons.bar_chart, "Insights", 3),
             navItem(Icons.person, "Profile", 4),
           ],
@@ -65,7 +65,6 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget navItem(IconData icon, String label, int index) {
     final isSelected = currentIndex == index;
-
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -77,18 +76,14 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           Icon(
             icon,
-            color: isSelected
-                ? const Color(0xFF9D4EDD)
-                : Colors.white54,
+            color: isSelected ? const Color(0xFF9D4EDD) : Colors.white54,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 11,
-              color: isSelected
-                  ? const Color(0xFF9D4EDD)
-                  : Colors.white54,
+              color: isSelected ? const Color(0xFF9D4EDD) : Colors.white54,
             ),
           ),
         ],
