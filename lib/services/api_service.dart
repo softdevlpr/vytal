@@ -111,26 +111,30 @@ class ApiService {
   // ─────────────────────────────
   // INSIGHTS
   // ─────────────────────────────
-  static Future<Map<String, dynamic>> getInsights({
-    required String uid,
-    required String period,
-  }) async {
-    try {
-      final res = await http.get(
-        Uri.parse('$dbBaseUrl/insights?uid=$uid&period=$period'),
-      );
+ static Future<Map<String, dynamic>> getInsights({
+  required String uid,
+  required String period,
+}) async {
+  try {
+    final url = '$dbBaseUrl/insights?uid=$uid&period=$period';
+    print(" API CALL: $url");
 
-      final data = jsonDecode(res.body);
+    final res = await http.get(Uri.parse(url));
 
-      if (res.statusCode == 200 && data['success'] == true) {
-        return data['data'];
-      }
-    } catch (e) {
-      print('[ERROR] getInsights: $e');
+    print(" STATUS: ${res.statusCode}");
+    print(" BODY: ${res.body}");
+
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode == 200 && data['success'] == true) {
+      return data['data'] ?? {};
     }
-
-    return {};
+  } catch (e) {
+    print('[ERROR] getInsights: $e');
   }
+
+  return {};
+}
 
   // ─────────────────────────────
   // TIPS
