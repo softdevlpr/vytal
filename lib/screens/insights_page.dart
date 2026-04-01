@@ -1,11 +1,10 @@
-// lib/pages/insights_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../data/app_constants.dart';
 import '../services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
@@ -19,50 +18,57 @@ class _InsightsPageState extends State<InsightsPage> {
   Map<String, dynamic> _data = {};
   bool _loading = true;
 
-  // Always reads the real logged-in user's UID — never hardcoded
-  String get _uid {
-  final user = FirebaseAuth.instance.currentUser;
-  print(" CURRENT USER: $user"); // DEBUG
-  print(" UID: ${user?.uid}"); //  DEBUG
-  return user?.uid ?? '';
-}
+  String _uid = '';
+
+  Future<void> _loadUid() async {
+    final prefs = await SharedPreferences.getInstance();
+    _uid = prefs.getString('uid') ?? '';
+
+    print(" LOADED UID: $_uid");
+  }
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _loadUid();
+    await _load();
   }
 
   Future<void> _load() async {
-  print(" LOADING INSIGHTS...");
-  print("UID: $_uid | PERIOD: $_period");
+    print(" LOADING INSIGHTS...");
+    print("UID: $_uid | PERIOD: $_period");
 
-  if (_uid.isEmpty) {
-    print(" UID EMPTY");
-    setState(() {
-      _data = {};  
-      _loading = false;
-    });
-    return;
+    if (_uid.isEmpty) {
+      print(" UID EMPTY");
+
+      setState(() {
+        _data = {};
+        _loading = false;
+      });
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      final data =
+          await ApiService.getInsights(uid: _uid, period: _period);
+
+      print(" API RESPONSE: $data");
+
+      setState(() {
+        _data = data;
+        _loading = false;
+      });
+    } catch (e) {
+      print(" LOAD ERROR: $e");
+      setState(() => _loading = false);
+    }
   }
-
-  setState(() => _loading = true);
-
-  try {
-    final data =
-        await ApiService.getInsights(uid: _uid, period: _period);
-
-    print(" API RESPONSE: $data");
-
-    setState(() {
-      _data = data;
-      _loading = false;
-    });
-  } catch (e) {
-    print(" LOAD ERROR: $e");
-    setState(() => _loading = false);
-  }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +103,6 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  // ── PERIOD SELECTOR ─────────────────────────────────────────────────────────
   Widget _periodSelector() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -136,7 +141,6 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  // ── MAIN CONTENT ────────────────────────────────────────────────────────────
   Widget _insightsContent() {
     final totalLogs = _data['total_logs'] ?? 0;
     final topSymptom = _data['top_symptom'] ?? 'None';
@@ -172,6 +176,7 @@ class _InsightsPageState extends State<InsightsPage> {
             ],
           ),
           const SizedBox(height: 24),
+
           if (chartPoints.isNotEmpty) ...[
             Text('Severity Trend',
                 style: GoogleFonts.poppins(
@@ -179,6 +184,7 @@ class _InsightsPageState extends State<InsightsPage> {
                     fontSize: 16,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
+
             Container(
               height: 200,
               padding: const EdgeInsets.all(16),
@@ -188,42 +194,6 @@ class _InsightsPageState extends State<InsightsPage> {
               ),
               child: LineChart(
                 LineChartData(
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    getDrawingHorizontalLine: (_) =>
-                        FlLine(color: Colors.white10, strokeWidth: 0.5),
-                  ),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 28,
-                        getTitlesWidget: (v, _) => Text('${v.toInt()}',
-                            style: GoogleFonts.poppins(
-                                color: AppColors.white54, fontSize: 10)),
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (v, _) {
-                          final idx = v.toInt();
-                          if (idx < 0 || idx >= chartPoints.length) {
-                            return const SizedBox();
-                          }
-                          return Text(
-                              chartPoints[idx]['label']?.toString() ?? '',
-                              style: GoogleFonts.poppins(
-                                  color: AppColors.white54, fontSize: 9));
-                        },
-                      ),
-                    ),
-                    rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                    topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
                     LineChartBarData(
@@ -236,68 +206,12 @@ class _InsightsPageState extends State<InsightsPage> {
                       isCurved: true,
                       color: AppColors.primary,
                       barWidth: 2.5,
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: AppColors.primary.withOpacity(0.1),
-                      ),
-                      dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (_, __, ___, ____) =>
-                            FlDotCirclePainter(
-                                radius: 3,
-                                color: AppColors.primary,
-                                strokeWidth: 0,
-                                strokeColor: Colors.transparent),
-                      ),
                     ),
                   ],
                 ),
               ),
             ),
           ],
-          const SizedBox(height: 24),
-          if ((_data['symptom_frequency'] as Map?)?.isNotEmpty ?? false) ...[
-            Text('Symptom Frequency',
-                style: GoogleFonts.poppins(
-                    color: AppColors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600)),
-            const SizedBox(height: 12),
-            ...(_data['symptom_frequency'] as Map<String, dynamic>)
-                .entries
-                .toList()
-                .take(6)
-                .map((e) => _frequencyBar(e.key, (e.value as num).toInt(),
-                    (_data['total_logs'] ?? 1) as int)),
-          ],
-          const SizedBox(height: 24),
-          if (_data['improvement'] != null)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.routineGreen.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(14),
-                border:
-                    Border.all(color: AppColors.routineGreen.withOpacity(0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.trending_up,
-                      color: AppColors.routineGreen, size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _data['improvement'].toString(),
-                      style: GoogleFonts.poppins(
-                          color: AppColors.routineGreen,
-                          fontSize: 13,
-                          height: 1.5),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 32),
         ],
       ),
     );
@@ -320,67 +234,18 @@ class _InsightsPageState extends State<InsightsPage> {
                 style: GoogleFonts.poppins(
                     color: AppColors.white,
                     fontSize: 18,
-                    fontWeight: FontWeight.w700),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
+                    fontWeight: FontWeight.w700)),
             Text(label,
-                style:
-                    GoogleFonts.poppins(color: AppColors.white54, fontSize: 11)),
+                style: GoogleFonts.poppins(
+                    color: AppColors.white54, fontSize: 11)),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _frequencyBar(String symptom, int count, int total) {
-    final pct = total > 0 ? count / total : 0.0;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(symptom,
-                  style:
-                      GoogleFonts.poppins(color: AppColors.white, fontSize: 12)),
-              Text('$count times',
-                  style: GoogleFonts.poppins(
-                      color: AppColors.white54, fontSize: 11)),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: pct,
-              backgroundColor: AppColors.card,
-              color: AppColors.primary,
-              minHeight: 6,
-            ),
-          ),
-        ],
       ),
     );
   }
 
   Widget _emptyState() => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.bar_chart, color: AppColors.white54, size: 60),
-            const SizedBox(height: 16),
-            Text('No data yet',
-                style: GoogleFonts.poppins(
-                    color: AppColors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Text('Log your first symptom to see insights here.',
-                style:
-                    GoogleFonts.poppins(color: AppColors.white54, fontSize: 13)),
-          ],
-        ),
+        child: Text("No data yet",
+            style: GoogleFonts.poppins(color: AppColors.white)),
       );
 }
