@@ -29,20 +29,35 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   Future<void> _load() async {
-    if (_uid.isEmpty) {
-      setState(() {
-        _data = {};
-        _loading = false;
-      });
-      return;
-    }
-    setState(() => _loading = true);
-    final data = await ApiService.getInsights(uid: _uid, period: _period);
+  print(" LOADING INSIGHTS...");
+  print("UID: $_uid | PERIOD: $_period");
+
+  if (_uid.isEmpty) {
+    print(" UID EMPTY");
+    setState(() {
+      _data = {};  
+      _loading = false;
+    });
+    return;
+  }
+
+  setState(() => _loading = true);
+
+  try {
+    final data =
+        await ApiService.getInsights(uid: _uid, period: _period);
+
+    print(" API RESPONSE: $data");
+
     setState(() {
       _data = data;
       _loading = false;
     });
+  } catch (e) {
+    print(" LOAD ERROR: $e");
+    setState(() => _loading = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {
