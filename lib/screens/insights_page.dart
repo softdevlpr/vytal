@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../data/app_constants.dart';
 import '../services/api_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
@@ -17,7 +18,7 @@ class _InsightsPageState extends State<InsightsPage> {
   String _period = 'week'; // week / month / year
   Map<String, dynamic> _data = {};
   bool _loading = true;
-  final String _uid = 'current_user_uid'; // replace with Firebase uid
+  String get _uid => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   @override
   void initState() {
