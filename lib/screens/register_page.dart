@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'login_page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -223,39 +224,49 @@ class _RegisterPageState extends State<RegisterPage> {
 
  
   void _register() async {
-    if (nameController.text.isEmpty ||
-        ageController.text.isEmpty ||
-        selectedGender == null ||
-        emailController.text.isEmpty ||
-        passwordController.text.isEmpty) {
-      _showMessage("Please fill all fields");
-      return;
-    }
-
-    try {
-      final response = await http.post(
-        Uri.parse("http://10.0.2.2:3000/api/auth/register"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "name": nameController.text.trim(),
-          "email": emailController.text.trim(),
-          "password": passwordController.text.trim(),
-        }),
-      );
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 201) {
-        _showMessage("Registered successfully");
-
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        _showMessage(data["message"] ?? "Registration failed");
-      }
-    } catch (e) {
-      _showMessage("Server error");
-    }
+  if (nameController.text.isEmpty ||
+      ageController.text.isEmpty ||
+      selectedGender == null ||
+      emailController.text.isEmpty ||
+      passwordController.text.isEmpty) {
+    _showMessage("Please fill all fields");
+    return;
   }
+
+  try {
+    final response = await http.post(
+      Uri.parse("http://10.0.2.2:3000/api/auth/register"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "name": nameController.text.trim(),
+        "email": emailController.text.trim(),
+        "password": passwordController.text.trim(),
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    print("🔍 REGISTER RESPONSE: $data"); // DEBUG
+
+    if (response.statusCode == 201) {
+      final uid = data['user']['uid']; //  IMPORTANT
+
+      print(" UID FROM REGISTER: $uid"); //  DEBUG
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('uid', uid); //  SAVE UID
+
+      _showMessage("Registered successfully");
+
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      _showMessage(data["message"] ?? "Registration failed");
+    }
+  } catch (e) {
+    print(" REGISTER ERROR: $e"); //  DEBUG
+    _showMessage("Server error");
+  }
+}
 
   void _showMessage(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
