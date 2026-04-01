@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../data/app_constants.dart';
 import '../services/api_service.dart';
 
@@ -14,10 +15,12 @@ class InsightsPage extends StatefulWidget {
 }
 
 class _InsightsPageState extends State<InsightsPage> {
-  String _period = 'week'; // week / month / year
+  String _period = 'week';
   Map<String, dynamic> _data = {};
   bool _loading = true;
-  final String _uid = 'current_user_uid'; // replace with Firebase uid
+
+  // Always reads the real logged-in user's UID — never hardcoded
+  String get _uid => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   @override
   void initState() {
@@ -26,9 +29,15 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   Future<void> _load() async {
+    if (_uid.isEmpty) {
+      setState(() {
+        _data = {};
+        _loading = false;
+      });
+      return;
+    }
     setState(() => _loading = true);
-    final data =
-        await ApiService.getInsights(uid: _uid, period: _period);
+    final data = await ApiService.getInsights(uid: _uid, period: _period);
     setState(() {
       _data = data;
       _loading = false;
@@ -94,13 +103,10 @@ class _InsightsPageState extends State<InsightsPage> {
                   p[0].toUpperCase() + p.substring(1),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
-                      color: isSelected
-                          ? AppColors.white
-                          : AppColors.white54,
+                      color: isSelected ? AppColors.white : AppColors.white54,
                       fontSize: 13,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.normal),
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.normal),
                 ),
               ),
             ),
@@ -123,38 +129,29 @@ class _InsightsPageState extends State<InsightsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Summary cards
           Row(
             children: [
-              _summaryCard('Total Logs', '$totalLogs', Icons.bar_chart,
-                  AppColors.primary),
+              _summaryCard(
+                  'Total Logs', '$totalLogs', Icons.bar_chart, AppColors.primary),
               const SizedBox(width: 12),
-              _summaryCard('Top Symptom', topSymptom,
-                  Icons.favorite_border, AppColors.soonAmber),
+              _summaryCard('Top Symptom', topSymptom, Icons.favorite_border,
+                  AppColors.soonAmber),
             ],
           ),
           const SizedBox(height: 12),
-
-          // Urgency breakdown
           Row(
             children: [
-              _summaryCard('Urgent',
-                  '${urgencyBreakdown['Urgent'] ?? 0}', Icons.warning,
-                  AppColors.urgentRed),
+              _summaryCard('Urgent', '${urgencyBreakdown['Urgent'] ?? 0}',
+                  Icons.warning, AppColors.urgentRed),
               const SizedBox(width: 8),
-              _summaryCard('Soon',
-                  '${urgencyBreakdown['Soon'] ?? 0}', Icons.schedule,
-                  AppColors.soonAmber),
+              _summaryCard('Soon', '${urgencyBreakdown['Soon'] ?? 0}',
+                  Icons.schedule, AppColors.soonAmber),
               const SizedBox(width: 8),
-              _summaryCard('Routine',
-                  '${urgencyBreakdown['Routine'] ?? 0}', Icons.check_circle,
-                  AppColors.routineGreen),
+              _summaryCard('Routine', '${urgencyBreakdown['Routine'] ?? 0}',
+                  Icons.check_circle, AppColors.routineGreen),
             ],
           ),
-
           const SizedBox(height: 24),
-
-          // Severity trend chart
           if (chartPoints.isNotEmpty) ...[
             Text('Severity Trend',
                 style: GoogleFonts.poppins(
@@ -174,8 +171,8 @@ class _InsightsPageState extends State<InsightsPage> {
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: false,
-                    getDrawingHorizontalLine: (_) => FlLine(
-                        color: Colors.white10, strokeWidth: 0.5),
+                    getDrawingHorizontalLine: (_) =>
+                        FlLine(color: Colors.white10, strokeWidth: 0.5),
                   ),
                   titlesData: FlTitlesData(
                     leftTitles: AxisTitles(
@@ -204,8 +201,8 @@ class _InsightsPageState extends State<InsightsPage> {
                     ),
                     rightTitles: AxisTitles(
                         sideTitles: SideTitles(showTitles: false)),
-                    topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
+                    topTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
@@ -238,10 +235,7 @@ class _InsightsPageState extends State<InsightsPage> {
               ),
             ),
           ],
-
           const SizedBox(height: 24),
-
-          // Symptom frequency
           if ((_data['symptom_frequency'] as Map?)?.isNotEmpty ?? false) ...[
             Text('Symptom Frequency',
                 style: GoogleFonts.poppins(
@@ -253,21 +247,18 @@ class _InsightsPageState extends State<InsightsPage> {
                 .entries
                 .toList()
                 .take(6)
-                .map((e) => _frequencyBar(e.key, e.value as int,
+                .map((e) => _frequencyBar(e.key, (e.value as num).toInt(),
                     (_data['total_logs'] ?? 1) as int)),
           ],
-
           const SizedBox(height: 24),
-
-          // Improvement note
           if (_data['improvement'] != null)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.routineGreen.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                    color: AppColors.routineGreen.withOpacity(0.3)),
+                border:
+                    Border.all(color: AppColors.routineGreen.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
@@ -275,24 +266,24 @@ class _InsightsPageState extends State<InsightsPage> {
                       color: AppColors.routineGreen, size: 22),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(_data['improvement'],
-                        style: GoogleFonts.poppins(
-                            color: AppColors.routineGreen,
-                            fontSize: 13,
-                            height: 1.5)),
+                    child: Text(
+                      _data['improvement'].toString(),
+                      style: GoogleFonts.poppins(
+                          color: AppColors.routineGreen,
+                          fontSize: 13,
+                          height: 1.5),
+                    ),
                   ),
                 ],
               ),
             ),
-
           const SizedBox(height: 32),
         ],
       ),
     );
   }
 
-  Widget _summaryCard(
-      String label, String value, IconData icon, Color color) {
+  Widget _summaryCard(String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -313,8 +304,8 @@ class _InsightsPageState extends State<InsightsPage> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
             Text(label,
-                style: GoogleFonts.poppins(
-                    color: AppColors.white54, fontSize: 11)),
+                style:
+                    GoogleFonts.poppins(color: AppColors.white54, fontSize: 11)),
           ],
         ),
       ),
@@ -332,8 +323,8 @@ class _InsightsPageState extends State<InsightsPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(symptom,
-                  style: GoogleFonts.poppins(
-                      color: AppColors.white, fontSize: 12)),
+                  style:
+                      GoogleFonts.poppins(color: AppColors.white, fontSize: 12)),
               Text('$count times',
                   style: GoogleFonts.poppins(
                       color: AppColors.white54, fontSize: 11)),
@@ -367,8 +358,8 @@ class _InsightsPageState extends State<InsightsPage> {
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Text('Log your first symptom to see insights here.',
-                style: GoogleFonts.poppins(
-                    color: AppColors.white54, fontSize: 13)),
+                style:
+                    GoogleFonts.poppins(color: AppColors.white54, fontSize: 13)),
           ],
         ),
       );
