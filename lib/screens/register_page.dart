@@ -249,7 +249,7 @@ class _RegisterPageState extends State<RegisterPage> {
     print("🔍 REGISTER RESPONSE: $data"); // DEBUG
 
     if (response.statusCode == 201) {
-      final uid = data['user']['uid']; //  IMPORTANT
+      final uid = data['data']['_id'];//  IMPORTANT
 
       print(" UID FROM REGISTER: $uid"); //  DEBUG
 
