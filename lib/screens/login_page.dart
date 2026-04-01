@@ -214,22 +214,31 @@ class _LoginPageState extends State<LoginPage> {
 
     final data = jsonDecode(response.body);
 
-    print(" LOGIN RESPONSE: $data"); //  DEBUG
+    print(" LOGIN RESPONSE: $data");
 
-    if (response.statusCode == 200) {
-      final uid = data['user']['uid']; //  IMPORTANT
+    if (response.statusCode == 200 && data["data"] != null) {
+      final user = data["data"];
 
-      print("UID FROM BACKEND: $uid"); // DEBUG
+      //   use _id 
+      final uid = user["_id"];
 
+      if (uid == null) {
+        _showMessage("User ID not found");
+        return;
+      }
+
+      //  SAVE UID
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('uid', uid); //  SAVE UID
+      await prefs.setString('uid', uid);
+
+      print(" SAVED UID: $uid");
 
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       _showMessage(data["message"] ?? "Login failed");
     }
   } catch (e) {
-    print(" LOGIN ERROR: $e"); //  DEBUG
+    print(" LOGIN ERROR: $e");
     _showMessage("Server error");
   }
 }
