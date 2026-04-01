@@ -1,11 +1,10 @@
-// lib/pages/add_symptoms_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/app_constants.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
 import 'test_result_page.dart';
+import 'package:shared_preferences/shared_preferences.dart'; //  ADDED
 
 class AddSymptomsPage extends StatefulWidget {
   const AddSymptomsPage({super.key});
@@ -16,9 +15,11 @@ class AddSymptomsPage extends StatefulWidget {
 
 class _AddSymptomsPageState extends State<AddSymptomsPage> {
   String? _selectedSymptom;
-  int _step = 0; // 0 = symptom picker, 1-6 = questions
+  int _step = 0;
   final Map<String, int> _answers = {};
   bool _loading = false;
+
+  String _uid = ''; //  ADDED
 
   List<Map<String, dynamic>> get _questions =>
       _selectedSymptom != null ? kSymptomQuestions[_selectedSymptom!] ?? [] : [];
@@ -61,8 +62,29 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
     }
   }
 
+  // LOAD UID
+  Future<void> _loadUid() async {
+    final prefs = await SharedPreferences.getInstance();
+    _uid = prefs.getString('uid') ?? '';
+  }
+
   Future<void> _submit() async {
     setState(() => _loading = true);
+
+    await _loadUid(); 
+
+    if (_uid.isEmpty) {
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('User not logged in',
+              style: GoogleFonts.poppins()),
+          backgroundColor: AppColors.urgentRed,
+        ),
+      );
+      return;
+    }
+
     try {
       final result = await ApiService.predict(
         symptom: _selectedSymptom!,
@@ -74,7 +96,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
           .toList();
 
       final log = SymptomLog(
-        uid: 'current_user_uid', // replace with actual Firebase UID
+        uid: _uid, 
         primarySymptom: _selectedSymptom!,
         answers: _answers,
         urgency: result['urgency'],
