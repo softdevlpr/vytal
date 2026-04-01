@@ -1,3 +1,4 @@
+// lib/pages/insights_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -14,12 +15,13 @@ class InsightsPage extends StatefulWidget {
 }
 
 class _InsightsPageState extends State<InsightsPage> {
-  String _period = 'week';
+  String _period = 'week'; // week / month / year
   Map<String, dynamic> _data = {};
   bool _loading = true;
 
   String _uid = '';
 
+  // ✅ LOAD UID FROM STORAGE
   Future<void> _loadUid() async {
     final prefs = await SharedPreferences.getInstance();
     _uid = prefs.getString('uid') ?? '';
@@ -34,8 +36,8 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   Future<void> _init() async {
-    await _loadUid();
-    await _load();
+    await _loadUid(); // FIRST LOAD UID
+    await _load();    // THEN FETCH DATA
   }
 
   Future<void> _load() async {
@@ -103,6 +105,7 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
+  // ── PERIOD SELECTOR ─────────────────────────────────────────────────────────
   Widget _periodSelector() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -128,10 +131,13 @@ class _InsightsPageState extends State<InsightsPage> {
                   p[0].toUpperCase() + p.substring(1),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
-                      color: isSelected ? AppColors.white : AppColors.white54,
+                      color: isSelected
+                          ? AppColors.white
+                          : AppColors.white54,
                       fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.normal),
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal),
                 ),
               ),
             ),
@@ -141,6 +147,7 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
+  // ── MAIN CONTENT ────────────────────────────────────────────────────────────
   Widget _insightsContent() {
     final totalLogs = _data['total_logs'] ?? 0;
     final topSymptom = _data['top_symptom'] ?? 'None';
@@ -153,30 +160,39 @@ class _InsightsPageState extends State<InsightsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          /// SUMMARY
           Row(
             children: [
-              _summaryCard(
-                  'Total Logs', '$totalLogs', Icons.bar_chart, AppColors.primary),
+              _summaryCard('Total Logs', '$totalLogs', Icons.bar_chart,
+                  AppColors.primary),
               const SizedBox(width: 12),
-              _summaryCard('Top Symptom', topSymptom, Icons.favorite_border,
-                  AppColors.soonAmber),
+              _summaryCard('Top Symptom', topSymptom,
+                  Icons.favorite_border, AppColors.soonAmber),
             ],
           ),
+
           const SizedBox(height: 12),
+
+          /// URGENCY
           Row(
             children: [
-              _summaryCard('Urgent', '${urgencyBreakdown['Urgent'] ?? 0}',
-                  Icons.warning, AppColors.urgentRed),
+              _summaryCard('Urgent',
+                  '${urgencyBreakdown['Urgent'] ?? 0}', Icons.warning,
+                  AppColors.urgentRed),
               const SizedBox(width: 8),
-              _summaryCard('Soon', '${urgencyBreakdown['Soon'] ?? 0}',
-                  Icons.schedule, AppColors.soonAmber),
+              _summaryCard('Soon',
+                  '${urgencyBreakdown['Soon'] ?? 0}', Icons.schedule,
+                  AppColors.soonAmber),
               const SizedBox(width: 8),
-              _summaryCard('Routine', '${urgencyBreakdown['Routine'] ?? 0}',
-                  Icons.check_circle, AppColors.routineGreen),
+              _summaryCard('Routine',
+                  '${urgencyBreakdown['Routine'] ?? 0}', Icons.check_circle,
+                  AppColors.routineGreen),
             ],
           ),
+
           const SizedBox(height: 24),
 
+          /// CHART
           if (chartPoints.isNotEmpty) ...[
             Text('Severity Trend',
                 style: GoogleFonts.poppins(
@@ -212,12 +228,15 @@ class _InsightsPageState extends State<InsightsPage> {
               ),
             ),
           ],
+
+          const SizedBox(height: 32),
         ],
       ),
     );
   }
 
-  Widget _summaryCard(String label, String value, IconData icon, Color color) {
+  Widget _summaryCard(
+      String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -245,7 +264,21 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   Widget _emptyState() => Center(
-        child: Text("No data yet",
-            style: GoogleFonts.poppins(color: AppColors.white)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.bar_chart, color: AppColors.white54, size: 60),
+            const SizedBox(height: 16),
+            Text('No data yet',
+                style: GoogleFonts.poppins(
+                    color: AppColors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Text('Log your first symptom to see insights here.',
+                style: GoogleFonts.poppins(
+                    color: AppColors.white54, fontSize: 13)),
+          ],
+        ),
       );
 }
