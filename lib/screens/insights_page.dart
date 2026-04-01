@@ -20,7 +20,12 @@ class _InsightsPageState extends State<InsightsPage> {
   bool _loading = true;
 
   // Always reads the real logged-in user's UID — never hardcoded
-  String get _uid => FirebaseAuth.instance.currentUser?.uid ?? '';
+  String get _uid {
+  final user = FirebaseAuth.instance.currentUser;
+  print(" CURRENT USER: $user"); // DEBUG
+  print(" UID: ${user?.uid}"); //  DEBUG
+  return user?.uid ?? '';
+}
 
   @override
   void initState() {
