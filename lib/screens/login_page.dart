@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'register_page.dart';
 import 'reset_password_page.dart';
@@ -193,35 +194,45 @@ class _LoginPageState extends State<LoginPage> {
 
  
   void _login() async {
-    String email = emailController.text.trim();
-    String password = passwordController.text.trim();
+  String email = emailController.text.trim();
+  String password = passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      _showMessage("Enter email & password");
-      return;
-    }
-
-    try {
-      final response = await http.post(
-        Uri.parse("http://10.0.2.2:3000/api/auth/login"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "email": email,
-          "password": password,
-        }),
-      );
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        _showMessage(data["message"] ?? "Login failed");
-      }
-    } catch (e) {
-      _showMessage("Server error");
-    }
+  if (email.isEmpty || password.isEmpty) {
+    _showMessage("Enter email & password");
+    return;
   }
+
+  try {
+    final response = await http.post(
+      Uri.parse("http://10.0.2.2:3000/api/auth/login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "email": email,
+        "password": password,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    print(" LOGIN RESPONSE: $data"); //  DEBUG
+
+    if (response.statusCode == 200) {
+      final uid = data['user']['uid']; //  IMPORTANT
+
+      print("UID FROM BACKEND: $uid"); // DEBUG
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('uid', uid); //  SAVE UID
+
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      _showMessage(data["message"] ?? "Login failed");
+    }
+  } catch (e) {
+    print(" LOGIN ERROR: $e"); //  DEBUG
+    _showMessage("Server error");
+  }
+}
 
   void _showMessage(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
