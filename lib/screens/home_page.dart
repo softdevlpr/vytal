@@ -1,48 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
-  String _firstName = ''; 
-  final Function(int) onNavigate; //  added
+  final Function(int) onNavigate;
 
   const HomePage({super.key, required this.onNavigate});
 
   @override
   State<HomePage> createState() => _HomePageState();
-   @override
-   void initState() {
-    super.initState();
-    _loadName();
-
-   Future<void> _loadName() async { 
-    final prefs = await SharedPreferences.getInstance();
-    final fullName = prefs.getString('name') ?? '';
-    setState(() {
-      _firstName = fullName.split(' ').first;
-    });
-  }
 }
 
 class _HomePageState extends State<HomePage> {
+  String _firstName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadName();
+  }
+
+  Future<void> _loadName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final fullName = prefs.getString('name') ?? '';
+
+    setState(() {
+      _firstName = fullName.isNotEmpty ? fullName.split(' ').first : '';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F011E),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               _profileHeader(),
-
               const SizedBox(height: 20),
-
               _dailyAffirmation(),
-
               const SizedBox(height: 25),
 
               Text(
@@ -61,7 +60,7 @@ class _HomePageState extends State<HomePage> {
                 subtitle: "Log how you feel today",
                 icon: Icons.favorite_border,
                 isPrimary: true,
-                onTap: () => widget.onNavigate(2), //  FIX
+                onTap: () => widget.onNavigate(2),
               ),
 
               const SizedBox(height: 12),
@@ -70,7 +69,7 @@ class _HomePageState extends State<HomePage> {
                 title: "Insights",
                 subtitle: "Understand your patterns",
                 icon: Icons.bar_chart,
-                onTap: () => widget.onNavigate(3), //  FIX
+                onTap: () => widget.onNavigate(3),
               ),
 
               const SizedBox(height: 12),
@@ -79,7 +78,7 @@ class _HomePageState extends State<HomePage> {
                 title: "Daily Tips",
                 subtitle: "Get relevant health tips",
                 icon: Icons.calendar_today,
-                onTap: () => widget.onNavigate(1), //  FIX
+                onTap: () => widget.onNavigate(1),
               ),
 
               const SizedBox(height: 12),
@@ -88,7 +87,7 @@ class _HomePageState extends State<HomePage> {
                 title: "Profile",
                 subtitle: "Manage your account",
                 icon: Icons.person,
-                onTap: () => widget.onNavigate(4), // FIX
+                onTap: () => widget.onNavigate(4),
               ),
             ],
           ),
@@ -113,7 +112,7 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Hello${_firstName.isNotEmpty ? ', $_firstName' : ''} 👋"
+                  "Hello${_firstName.isNotEmpty ? ', $_firstName' : ''} 👋",
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 18,
@@ -200,7 +199,6 @@ class _HomePageState extends State<HomePage> {
           children: [
             Icon(icon, color: Colors.white),
             const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,7 +221,6 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-
             const Icon(Icons.arrow_forward_ios,
                 size: 16, color: Colors.white54),
           ],
