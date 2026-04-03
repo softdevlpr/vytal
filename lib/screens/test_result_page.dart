@@ -36,22 +36,29 @@ class _TestResultPageState extends State<TestResultPage> {
   }
 
   Future<void> _loadTips() async {
-    final tips = await ApiService.getTipsForSymptom(widget.log.primarySymptom);
-    setState(() {
-      _tips = tips;
-      _loadingTips = false;
-    });
-  }
+  final tips = await ApiService.getTipsForSymptom(widget.log.primarySymptom);
+
+  if (!mounted) return; //  FIX
+
+  setState(() {
+    _tips = tips;
+    _loadingTips = false;
+  });
+}
 
   Future<void> _loadClinics() async {
-    final testNames =
-        widget.log.recommendedTests.map((t) => t.name).toList();
-    final clinics = await ApiService.getClinicsForTests(testNames);
-    setState(() {
-      _clinics = clinics;
-      _loadingClinics = false;
-    });
-  }
+  final testNames =
+      widget.log.recommendedTests.map((t) => t.name).toList();
+
+  final clinics = await ApiService.getClinicsForTests(testNames);
+
+  if (!mounted) return; // FIX
+
+  setState(() {
+    _clinics = clinics;
+    _loadingClinics = false;
+  });
+}
 
   Color get _urgencyColor => urgencyColor(widget.log.urgency);
 
