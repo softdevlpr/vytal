@@ -71,8 +71,15 @@ class _TestResultPageState extends State<TestResultPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-          onPressed: widget.onBackToHome, // FIXED
-        ),
+          onPressed: () {
+            widget.onBackToHome(); // your custom navigation
+
+          // fallback safety 
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        },
+      ),
         title: Text('Your Results',
             style: GoogleFonts.poppins(
                 color: AppColors.white,
