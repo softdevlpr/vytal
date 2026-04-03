@@ -9,7 +9,9 @@ import '../models/models.dart';
 import '../services/api_service.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
-  const ProfileSettingsPage({super.key});
+  final VoidCallback onBackToHome; //  added
+
+  const ProfileSettingsPage({super.key, required this.onBackToHome}); //  updated
 
   @override
   State<ProfileSettingsPage> createState() => _ProfileSettingsPageState();
@@ -143,7 +145,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: widget.onBackToHome, // fixed
         ),
         title: Text('Profile & Settings',
             style: GoogleFonts.poppins(
@@ -242,7 +244,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               items: ['Male', 'Female', 'Other']
                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                   .toList(),
-              onChanged: _editMode ? (val) => setState(() => _selectedGender = val) : null,
+              onChanged: _editMode
+                  ? (val) => setState(() => _selectedGender = val)
+                  : null,
               decoration: _inputDecoration('Gender'),
             ),
           ],
