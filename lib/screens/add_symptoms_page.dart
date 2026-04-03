@@ -111,14 +111,14 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
 
       if (!mounted) return;
       Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => TestResultPage(
-            log: log,
-              onBackToHome: () {
-                widget.onBackToHome(); // go to Home (index 0)
+      context,
+      MaterialPageRoute(
+        builder: (_) => TestResultPage(
+          log: log,
+            onBackToHome: () {
+              widget.onBackToHome(); // switch to Home tab
 
-                Navigator.popUntil(context, (route) => route.isFirst);
+              Navigator.pop(context); // just go back ONE screen
       },
     ),
   ),
