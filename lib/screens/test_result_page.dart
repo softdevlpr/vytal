@@ -69,17 +69,10 @@ class _TestResultPageState extends State<TestResultPage> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-          onPressed: () {
-            widget.onBackToHome(); // your custom navigation
-
-          // fallback safety 
-          if (Navigator.canPop(context)) {
-            Navigator.pop(context);
-          }
-        },
-      ),
+       leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
+        onPressed: widget.onBackToHome, // ✅ Calls the callback passed from AddSymptomsPage
+        ),
         title: Text('Your Results',
             style: GoogleFonts.poppins(
                 color: AppColors.white,
