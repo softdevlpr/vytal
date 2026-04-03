@@ -255,7 +255,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('uid', uid); //  SAVE UID
-      await prefs.setString('name', data['data']['name'] ?? '')
+      await prefs.setString('name', data['data']['name'] ?? '');
 
       _showMessage("Registered successfully");
 
