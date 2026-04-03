@@ -1,48 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// Pages
-import 'add_symptoms_page.dart';
-import 'insights_page.dart';
-import 'plan_page.dart';
-import 'profile_settings_page.dart';
-import 'reminder_page.dart';
-
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final Function(int) onNavigate; //  added
+
+  const HomePage({super.key, required this.onNavigate});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-
-  int currentIndex = 0;
-
-  void handleNavigation(int index) {
-    setState(() {
-      currentIndex = index;
-    });
-
-    switch (index) {
-      case 1:
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const PlanPage()));
-        break;
-      case 2:
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const AddSymptomsPage()));
-        break;
-      case 3:
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const InsightsPage()));
-        break;
-      case 4:
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const ProfileSettingsPage()));
-        break;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +24,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              _profileHeader(context),
+              _profileHeader(),
 
               const SizedBox(height: 20),
 
@@ -76,42 +44,38 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 15),
 
               _navigationCard(
-                context,
                 title: "Track Symptoms",
                 subtitle: "Log how you feel today",
                 icon: Icons.favorite_border,
                 isPrimary: true,
-                page: const AddSymptomsPage(),
+                onTap: () => widget.onNavigate(2), //  FIX
               ),
 
               const SizedBox(height: 12),
 
               _navigationCard(
-                context,
                 title: "Insights",
                 subtitle: "Understand your patterns",
                 icon: Icons.bar_chart,
-                page: const InsightsPage(),
+                onTap: () => widget.onNavigate(3), //  FIX
               ),
 
               const SizedBox(height: 12),
 
               _navigationCard(
-                context,
                 title: "Daily Tips",
                 subtitle: "Get relevant health tips",
                 icon: Icons.calendar_today,
-                page: PlanPage(),
+                onTap: () => widget.onNavigate(1), //  FIX
               ),
 
               const SizedBox(height: 12),
 
               _navigationCard(
-                context,
-                title: "Reminders",
-                subtitle: "Never miss anything",
-                icon: Icons.notifications_none,
-                page: const ReminderPage(),
+                title: "Profile",
+                subtitle: "Manage your account",
+                icon: Icons.person,
+                onTap: () => widget.onNavigate(4), // FIX
               ),
             ],
           ),
@@ -120,36 +84,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget navItem(IconData icon, String label, int index) {
-    final isSelected = currentIndex == index;
-
-    return GestureDetector(
-      onTap: () => handleNavigation(index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected
-                ? const Color(0xFF9D4EDD)
-                : Colors.white54,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              color: isSelected
-                  ? const Color(0xFF9D4EDD)
-                  : Colors.white54,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _profileHeader(BuildContext context) {
+  Widget _profileHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -225,21 +160,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _navigationCard(
-    BuildContext context, {
+  Widget _navigationCard({
     required String title,
     required String subtitle,
     required IconData icon,
-    required Widget page,
+    required VoidCallback onTap,
     bool isPrimary = false,
   }) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => page),
-        );
-      },
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
