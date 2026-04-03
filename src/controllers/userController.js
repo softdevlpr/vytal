@@ -1,13 +1,15 @@
 const { getDB } = require("../config/db");
+const { ObjectId } = require('mongodb');
 
 const clean = (doc) => { doc._id = doc._id.toString(); return doc; };
 
 // GET /users/:uid
 const getUser = async (req, res) => {
   try {
-    const db  = getDB();
-    const user = await db.collection("users").findOne({ uid: req.params.uid });
-
+    const db = getDB();
+    const user = await db.collection("users").findOne({ 
+      _id: new ObjectId(req.params.uid)  // look up by _id
+    });
     if (!user) {
       return res.status(404).json({ success: false, error: "User not found" });
     }
@@ -48,17 +50,14 @@ const createUser = async (req, res) => {
 // PUT /users/:uid
 const updateUser = async (req, res) => {
   try {
-    const db   = getDB();
+    const db = getDB();
     const body = req.body || {};
-
-    // Never overwrite _id from client payload
     delete body._id;
     body.updated_at = new Date().toISOString();
-
-    await db
-      .collection("users")
-      .updateOne({ uid: req.params.uid }, { $set: body });
-
+    await db.collection("users").updateOne(
+      { _id: new ObjectId(req.params.uid) }, //  use _id
+      { $set: body }
+    );
     res.json({ success: true, data: { message: "Updated" } });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
@@ -68,13 +67,11 @@ const updateUser = async (req, res) => {
 // DELETE /users/:uid  — cascades to logs & reminders
 const deleteUser = async (req, res) => {
   try {
-    const db  = getDB();
+    const db = getDB();
     const uid = req.params.uid;
-
-    await db.collection("users").deleteOne({ uid });
+    await db.collection("users").deleteOne({ _id: new ObjectId(uid) }); // 
     await db.collection("symptom_logs").deleteMany({ uid });
     await db.collection("reminders").deleteMany({ uid });
-
     res.json({ success: true, data: { message: "Account deleted" } });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
