@@ -9,7 +9,13 @@ import '../services/api_service.dart';
 
 class TestResultPage extends StatefulWidget {
   final SymptomLog log;
-  const TestResultPage({super.key, required this.log});
+  final VoidCallback onBackToHome; //  added
+
+  const TestResultPage({
+    super.key,
+    required this.log,
+    required this.onBackToHome, //  added
+  });
 
   @override
   State<TestResultPage> createState() => _TestResultPageState();
@@ -57,7 +63,7 @@ class _TestResultPageState extends State<TestResultPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: widget.onBackToHome, // FIXED
         ),
         title: Text('Your Results',
             style: GoogleFonts.poppins(
@@ -98,7 +104,6 @@ class _TestResultPageState extends State<TestResultPage> {
     );
   }
 
-  // ── URGENCY BANNER ──────────────────────────────────────────────────────────
   Widget _urgencyBanner() {
     return Container(
       width: double.infinity,
@@ -147,7 +152,6 @@ class _TestResultPageState extends State<TestResultPage> {
     );
   }
 
-  // ── TEST CARD ───────────────────────────────────────────────────────────────
   Widget _testCard(RecommendedTest test) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -157,7 +161,6 @@ class _TestResultPageState extends State<TestResultPage> {
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 32,
@@ -170,8 +173,7 @@ class _TestResultPageState extends State<TestResultPage> {
             child: Text('${test.rank}',
                 style: GoogleFonts.poppins(
                     color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14)),
+                    fontWeight: FontWeight.w700)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -181,12 +183,11 @@ class _TestResultPageState extends State<TestResultPage> {
                 Text(test.name,
                     style: GoogleFonts.poppins(
                         color: AppColors.white,
-                        fontSize: 14,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 Text(test.description,
                     style: GoogleFonts.poppins(
-                        color: AppColors.white54, fontSize: 12, height: 1.5)),
+                        color: AppColors.white54, fontSize: 12)),
               ],
             ),
           ),
@@ -195,7 +196,6 @@ class _TestResultPageState extends State<TestResultPage> {
     );
   }
 
-  // ── TIP CARD ────────────────────────────────────────────────────────────────
   Widget _tipCard(LifestyleTip tip) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -206,9 +206,8 @@ class _TestResultPageState extends State<TestResultPage> {
         border: Border.all(color: AppColors.primary.withOpacity(0.15)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.lightbulb_outline, color: AppColors.primary, size: 22),
+          Icon(Icons.lightbulb_outline, color: AppColors.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -217,12 +216,11 @@ class _TestResultPageState extends State<TestResultPage> {
                 Text(tip.category,
                     style: GoogleFonts.poppins(
                         color: AppColors.white,
-                        fontSize: 13,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 Text(tip.text,
                     style: GoogleFonts.poppins(
-                        color: AppColors.white54, fontSize: 12, height: 1.5)),
+                        color: AppColors.white54, fontSize: 12)),
               ],
             ),
           ),
@@ -231,7 +229,6 @@ class _TestResultPageState extends State<TestResultPage> {
     );
   }
 
-  // ── CLINIC CARD ─────────────────────────────────────────────────────────────
   Widget _clinicCard(Clinic clinic) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -244,70 +241,21 @@ class _TestResultPageState extends State<TestResultPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            clinic.name,
-            style: GoogleFonts.poppins(
-                color: AppColors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600),
-          ),
+          Text(clinic.name,
+              style: GoogleFonts.poppins(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.location_on,
-                  color: AppColors.white54, size: 14),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  clinic.address,
-                  style: GoogleFonts.poppins(
-                      color: AppColors.white54, fontSize: 12, height: 1.4),
-                ),
-              ),
-            ],
-          ),
+          Text(clinic.address,
+              style: GoogleFonts.poppins(
+                  color: AppColors.white54, fontSize: 12)),
           const SizedBox(height: 10),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: clinic.testsAvailable
-                .map((test) => Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: AppColors.primary.withOpacity(0.3)),
-                      ),
-                      child: Text(
-                        test,
-                        style: GoogleFonts.poppins(
-                            color: AppColors.primary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500),
-                      ),
-                    ))
-                .toList(),
-          ),
-          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () => _call(clinic.phone),
               icon: const Icon(Icons.call, size: 16),
-              label: Text(
-                clinic.phone,
-                style: GoogleFonts.poppins(fontSize: 12),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-              ),
+              label: Text(clinic.phone),
             ),
           ),
         ],
