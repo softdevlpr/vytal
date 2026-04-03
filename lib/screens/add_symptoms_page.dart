@@ -4,10 +4,12 @@ import '../data/app_constants.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
 import 'test_result_page.dart';
-import 'package:shared_preferences/shared_preferences.dart'; //  ADDED
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddSymptomsPage extends StatefulWidget {
-  const AddSymptomsPage({super.key});
+  final VoidCallback onBackToHome; //  added
+
+  const AddSymptomsPage({super.key, required this.onBackToHome});
 
   @override
   State<AddSymptomsPage> createState() => _AddSymptomsPageState();
@@ -19,7 +21,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
   final Map<String, int> _answers = {};
   bool _loading = false;
 
-  String _uid = ''; //  ADDED
+  String _uid = '';
 
   List<Map<String, dynamic>> get _questions =>
       _selectedSymptom != null ? kSymptomQuestions[_selectedSymptom!] ?? [] : [];
@@ -62,7 +64,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
     }
   }
 
-  // LOAD UID
   Future<void> _loadUid() async {
     final prefs = await SharedPreferences.getInstance();
     _uid = prefs.getString('uid') ?? '';
@@ -71,7 +72,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
   Future<void> _submit() async {
     setState(() => _loading = true);
 
-    await _loadUid(); 
+    await _loadUid();
 
     if (_uid.isEmpty) {
       setState(() => _loading = false);
@@ -96,7 +97,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
           .toList();
 
       final log = SymptomLog(
-        uid: _uid, 
+        uid: _uid,
         primarySymptom: _selectedSymptom!,
         answers: _answers,
         urgency: result['urgency'],
@@ -138,7 +139,9 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-          onPressed: _step == 0 ? () => Navigator.pop(context) : _back,
+          onPressed: _step == 0
+              ? widget.onBackToHome // FIXED
+              : _back,
         ),
         title: Text(
           _step == 0 ? 'Select Symptom' : _selectedSymptom ?? '',
@@ -238,7 +241,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Progress
           Row(
             children: [
               Text('Question $_step of 6',
@@ -260,10 +262,8 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
               minHeight: 6,
             ),
           ),
-
           const SizedBox(height: 40),
 
-          // Question
           Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
@@ -281,12 +281,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
 
           const SizedBox(height: 32),
 
-          // Answers
           if (isScale) ...[
-            Text('Tap to select severity',
-                style: GoogleFonts.poppins(
-                    color: AppColors.white54, fontSize: 13)),
-            const SizedBox(height: 16),
             Row(
               children: [
                 _scaleOption(1, 'Mild', AppColors.routineGreen, currentAnswer),
@@ -309,14 +304,12 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
 
           const Spacer(),
 
-          // Next button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: currentAnswer != null ? _next : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                disabledBackgroundColor: AppColors.card,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -330,7 +323,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
         ],
       ),
     );
@@ -398,19 +390,19 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
 
   IconData _symptomIcon(String symptom) {
     switch (symptom) {
-      case 'Chest Pain':          return Icons.favorite_border;
+      case 'Chest Pain': return Icons.favorite_border;
       case 'Shortness of Breath': return Icons.air;
-      case 'Dizziness':           return Icons.rotate_right;
-      case 'High BP':             return Icons.monitor_heart;
-      case 'Sweating':            return Icons.water_drop;
-      case 'Nausea':              return Icons.sick;
-      case 'Fatigue':             return Icons.battery_1_bar;
-      case 'Arm Pain':            return Icons.accessibility_new;
-      case 'Jaw Pain':            return Icons.face;
+      case 'Dizziness': return Icons.rotate_right;
+      case 'High BP': return Icons.monitor_heart;
+      case 'Sweating': return Icons.water_drop;
+      case 'Nausea': return Icons.sick;
+      case 'Fatigue': return Icons.battery_1_bar;
+      case 'Arm Pain': return Icons.accessibility_new;
+      case 'Jaw Pain': return Icons.face;
       case 'Irregular Heartbeat': return Icons.timeline;
-      case 'Swelling Legs':       return Icons.directions_walk;
-      case 'Fainting':            return Icons.warning_amber;
-      default:                    return Icons.medical_services;
+      case 'Swelling Legs': return Icons.directions_walk;
+      case 'Fainting': return Icons.warning_amber;
+      default: return Icons.medical_services;
     }
   }
 }
