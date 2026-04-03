@@ -7,7 +7,9 @@ import '../models/models.dart';
 import '../services/api_service.dart';
 
 class PlanPage extends StatefulWidget {
-  const PlanPage({super.key});
+  final VoidCallback onBackToHome; //  added
+
+  const PlanPage({super.key, required this.onBackToHome}); //  updated
 
   @override
   State<PlanPage> createState() => _PlanPageState();
@@ -68,7 +70,7 @@ class _PlanPageState extends State<PlanPage>
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: widget.onBackToHome, //  fixed
         ),
         title: Text('Daily Tips',
             style: GoogleFonts.poppins(
@@ -78,7 +80,6 @@ class _PlanPageState extends State<PlanPage>
       ),
       body: Column(
         children: [
-          // Category tabs (horizontal scroll)
           SizedBox(
             height: 44,
             child: ListView.builder(
@@ -133,7 +134,6 @@ class _PlanPageState extends State<PlanPage>
 
           const SizedBox(height: 16),
 
-          // Tips list
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -180,7 +180,6 @@ class _PlanPageState extends State<PlanPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── HEADER: icon + category ──
             Row(
               children: [
                 Icon(Icons.lightbulb_outline, color: accent, size: 20),
@@ -198,7 +197,6 @@ class _PlanPageState extends State<PlanPage>
               ],
             ),
             const SizedBox(height: 10),
-            // ── TIP TEXT ──
             Text(
               tip.text,
               style: GoogleFonts.poppins(
@@ -207,7 +205,6 @@ class _PlanPageState extends State<PlanPage>
                 height: 1.6,
               ),
             ),
-            // ── SYMPTOM TAGS ──
             if (tip.symptoms.isNotEmpty) ...[
               const SizedBox(height: 10),
               Wrap(
