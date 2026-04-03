@@ -116,9 +116,15 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
         builder: (_) => TestResultPage(
           log: log,
             onBackToHome: () {
-              Navigator.pop(context); // pop TestResultPage first
-              widget.onBackToHome();  // then switch to Home tab
-            },
+              Navigator.pop(context);
+            // Reset state before going home
+              setState(() {
+                _step = 0;
+                _selectedSymptom = null;
+                _answers.clear();
+  });
+  widget.onBackToHome();
+},
     ),
   ),
 );
