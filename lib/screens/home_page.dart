@@ -2,12 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomePage extends StatefulWidget {
+  String _firstName = ''; 
   final Function(int) onNavigate; //  added
 
   const HomePage({super.key, required this.onNavigate});
 
   @override
   State<HomePage> createState() => _HomePageState();
+   @override
+   void initState() {
+    super.initState();
+    _loadName();
+
+   Future<void> _loadName() async { 
+    final prefs = await SharedPreferences.getInstance();
+    final fullName = prefs.getString('name') ?? '';
+    setState(() {
+      _firstName = fullName.split(' ').first;
+    });
+  }
 }
 
 class _HomePageState extends State<HomePage> {
@@ -100,7 +113,7 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Hello 👋",
+                  "Hello${_firstName.isNotEmpty ? ', $_firstName' : ''} 👋"
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 18,
