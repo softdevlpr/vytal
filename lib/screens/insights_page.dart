@@ -8,20 +8,21 @@ import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class InsightsPage extends StatefulWidget {
-  const InsightsPage({super.key});
+  final VoidCallback onBackToHome; //  added
+
+  const InsightsPage({super.key, required this.onBackToHome}); //  updated
 
   @override
   State<InsightsPage> createState() => _InsightsPageState();
 }
 
 class _InsightsPageState extends State<InsightsPage> {
-  String _period = 'week'; // week / month / year
+  String _period = 'week';
   Map<String, dynamic> _data = {};
   bool _loading = true;
 
   String _uid = '';
 
-  // ✅ LOAD UID FROM STORAGE
   Future<void> _loadUid() async {
     final prefs = await SharedPreferences.getInstance();
     _uid = prefs.getString('uid') ?? '';
@@ -36,8 +37,8 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   Future<void> _init() async {
-    await _loadUid(); // FIRST LOAD UID
-    await _load();    // THEN FETCH DATA
+    await _loadUid();
+    await _load();
   }
 
   Future<void> _load() async {
@@ -81,7 +82,7 @@ class _InsightsPageState extends State<InsightsPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: widget.onBackToHome, // fixed
         ),
         title: Text('Insights',
             style: GoogleFonts.poppins(
@@ -105,7 +106,6 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  // ── PERIOD SELECTOR ─────────────────────────────────────────────────────────
   Widget _periodSelector() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -147,7 +147,6 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  // ── MAIN CONTENT ────────────────────────────────────────────────────────────
   Widget _insightsContent() {
     final totalLogs = _data['total_logs'] ?? 0;
     final topSymptom = _data['top_symptom'] ?? 'None';
@@ -160,7 +159,6 @@ class _InsightsPageState extends State<InsightsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// SUMMARY
           Row(
             children: [
               _summaryCard('Total Logs', '$totalLogs', Icons.bar_chart,
@@ -173,7 +171,6 @@ class _InsightsPageState extends State<InsightsPage> {
 
           const SizedBox(height: 12),
 
-          /// URGENCY
           Row(
             children: [
               _summaryCard('Urgent',
@@ -192,7 +189,6 @@ class _InsightsPageState extends State<InsightsPage> {
 
           const SizedBox(height: 24),
 
-          /// CHART
           if (chartPoints.isNotEmpty) ...[
             Text('Severity Trend',
                 style: GoogleFonts.poppins(
@@ -216,7 +212,8 @@ class _InsightsPageState extends State<InsightsPage> {
                       spots: chartPoints
                           .asMap()
                           .entries
-                          .map((e) => FlSpot(e.key.toDouble(),
+                          .map((e) => FlSpot(
+                              e.key.toDouble(),
                               (e.value['score'] ?? 0).toDouble()))
                           .toList(),
                       isCurved: true,
