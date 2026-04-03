@@ -113,7 +113,10 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => TestResultPage(log: log),
+          builder: (_) => TestResultPage(
+            log: log,
+            onBackToHome: widget.onBackToHome,
+          ),
         ),
       );
     } catch (e) {
