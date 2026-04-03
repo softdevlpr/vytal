@@ -118,7 +118,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
             onBackToHome: () {
               widget.onBackToHome(); // switch to Home tab
 
-              Navigator.pop(context); // just go back ONE screen
+             
       },
     ),
   ),
