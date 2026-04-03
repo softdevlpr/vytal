@@ -14,50 +14,65 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
 
-  // Moved to late final so pages are created once and never remounted
+  void goToHome() {
+    setState(() {
+      currentIndex = 0;
+    });
+  }
+
+  //  pass callback to pages
   late final List<Widget> pages = [
     const HomePage(),
-    const PlanPage(),
-    const AddSymptomsPage(),
-    const InsightsPage(),
-    const ProfileSettingsPage(),
+    PlanPage(onBackToHome: goToHome),
+    AddSymptomsPage(onBackToHome: goToHome), //  update this page too
+    InsightsPage(onBackToHome: goToHome),   //  update this page too
+    ProfileSettingsPage(onBackToHome: goToHome), //  update this page too
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F011E),
-      // IndexedStack keeps all pages alive — they won't remount on tab switch
-      body: IndexedStack(
-        index: currentIndex,
-        children: pages,
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        color: const Color(0xFF1E1E2C),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            navItem(Icons.home, "Home", 0),
-            navItem(Icons.check_circle, "Tips", 1),
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  currentIndex = 2;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
+    return WillPopScope(
+      //  handles Android system back button
+      onWillPop: () async {
+        if (currentIndex != 0) {
+          goToHome();
+          return false; //  don’t exit app
+        }
+        return true; //  allow exit if already on Home
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0F011E),
+        body: IndexedStack(
+          index: currentIndex,
+          children: pages,
+        ),
+        bottomNavigationBar: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          color: const Color(0xFF1E1E2C),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              navItem(Icons.home, "Home", 0),
+              navItem(Icons.check_circle, "Tips", 1),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    currentIndex = 2;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                  child: const Icon(Icons.add, color: Colors.black),
                 ),
-                child: const Icon(Icons.add, color: Colors.black),
               ),
-            ),
-            navItem(Icons.bar_chart, "Insights", 3),
-            navItem(Icons.person, "Profile", 4),
-          ],
+              navItem(Icons.bar_chart, "Insights", 3),
+              navItem(Icons.person, "Profile", 4),
+            ],
+          ),
         ),
       ),
     );
