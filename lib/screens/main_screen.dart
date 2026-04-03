@@ -28,7 +28,7 @@ class _MainScreenState extends State<MainScreen> {
     });
   }),
   PlanPage(onBackToHome: goToHome),
-  AddSymptomsPage(), // no change here
+  AddSymptomsPage(onBackToHome: goToHome),
   InsightsPage(onBackToHome: goToHome),
   ProfileSettingsPage(onBackToHome: goToHome),
 ];
