@@ -110,15 +110,19 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
       await ApiService.saveSymptomLog(log);
 
       if (!mounted) return;
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => TestResultPage(
             log: log,
-            onBackToHome: widget.onBackToHome,
-          ),
-        ),
-      );
+              onBackToHome: () {
+                widget.onBackToHome(); // go to Home (index 0)
+
+                Navigator.popUntil(context, (route) => route.isFirst);
+      },
+    ),
+  ),
+);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
