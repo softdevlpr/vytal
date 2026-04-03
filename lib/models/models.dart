@@ -22,15 +22,15 @@ class UserModel {
   });
 
   factory UserModel.fromMap(Map<String, dynamic> m) => UserModel(
-        uid: m['uid'] ?? '',
-        name: m['name'] ?? '',
-        email: m['email'] ?? '',
-        age: m['age'],
-        gender: m['gender'],
-        avatarUrl: m['avatar_url'],
-        symptomScores: Map<String, int>.from(m['symptom_scores'] ?? {}),
-        preferredCategories: List<String>.from(m['preferred_categories'] ?? []),
-      );
+      uid: m['_id']?.toString() ?? m['uid'] ?? '',  // read _id first
+      name: m['name'] ?? '',
+      email: m['email'] ?? '',
+      age: m['age'],
+      gender: m['gender'],
+      avatarUrl: m['avatar_url'],
+      symptomScores: Map<String, int>.from(m['symptom_scores'] ?? {}),
+      preferredCategories: List<String>.from(m['preferred_categories'] ?? []),
+    );
 
   Map<String, dynamic> toMap() => {
         'uid': uid,
