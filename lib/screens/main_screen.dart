@@ -7,6 +7,7 @@ import 'add_symptoms_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -15,34 +16,35 @@ class _MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
 
   void goToHome() {
+    if (!mounted) return; //  FIX
     setState(() {
       currentIndex = 0;
     });
   }
 
-  //  pass callback to pages
-  late final List<Widget> pages = [
-  HomePage(onNavigate: (index) {
-    setState(() {
-      currentIndex = index;
-    });
-  }),
-  PlanPage(onBackToHome: goToHome),
-  AddSymptomsPage(onBackToHome: goToHome),
-  InsightsPage(onBackToHome: goToHome),
-  ProfileSettingsPage(onBackToHome: goToHome),
-];
+  //  FIX: REMOVE late final and use getter
+  List<Widget> get pages => [
+        HomePage(onNavigate: (index) {
+          if (!mounted) return; //  FIX
+          setState(() {
+            currentIndex = index;
+          });
+        }),
+        PlanPage(onBackToHome: goToHome),
+        AddSymptomsPage(onBackToHome: goToHome),
+        InsightsPage(onBackToHome: goToHome),
+        ProfileSettingsPage(onBackToHome: goToHome),
+      ];
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      //  handles Android system back button
       onWillPop: () async {
         if (currentIndex != 0) {
           goToHome();
-          return false; //  don’t exit app
+          return false;
         }
-        return true; //  allow exit if already on Home
+        return true;
       },
       child: Scaffold(
         backgroundColor: const Color(0xFF0F011E),
@@ -58,8 +60,11 @@ class _MainScreenState extends State<MainScreen> {
             children: [
               navItem(Icons.home, "Home", 0),
               navItem(Icons.check_circle, "Tips", 1),
+
+              // ➕ CENTER BUTTON
               GestureDetector(
                 onTap: () {
+                  if (!mounted) return; // FIX
                   setState(() {
                     currentIndex = 2;
                   });
@@ -73,6 +78,7 @@ class _MainScreenState extends State<MainScreen> {
                   child: const Icon(Icons.add, color: Colors.black),
                 ),
               ),
+
               navItem(Icons.bar_chart, "Insights", 3),
               navItem(Icons.person, "Profile", 4),
             ],
@@ -84,8 +90,10 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget navItem(IconData icon, String label, int index) {
     final isSelected = currentIndex == index;
+
     return GestureDetector(
       onTap: () {
+        if (!mounted) return; //  FIX
         setState(() {
           currentIndex = index;
         });
@@ -102,7 +110,9 @@ class _MainScreenState extends State<MainScreen> {
             label,
             style: TextStyle(
               fontSize: 11,
-              color: isSelected ? const Color(0xFF9D4EDD) : Colors.white54,
+              color: isSelected
+                  ? const Color(0xFF9D4EDD)
+                  : Colors.white54,
             ),
           ),
         ],
