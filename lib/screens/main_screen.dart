@@ -22,12 +22,16 @@ class _MainScreenState extends State<MainScreen> {
 
   //  pass callback to pages
   late final List<Widget> pages = [
-    const HomePage(),
-    PlanPage(onBackToHome: goToHome),
-    AddSymptomsPage(onBackToHome: goToHome), //  update this page too
-    InsightsPage(onBackToHome: goToHome),   //  update this page too
-    ProfileSettingsPage(onBackToHome: goToHome), //  update this page too
-  ];
+  HomePage(onNavigate: (index) {
+    setState(() {
+      currentIndex = index;
+    });
+  }),
+  PlanPage(onBackToHome: goToHome),
+  AddSymptomsPage(), // no change here
+  InsightsPage(onBackToHome: goToHome),
+  ProfileSettingsPage(onBackToHome: goToHome),
+];
 
   @override
   Widget build(BuildContext context) {
