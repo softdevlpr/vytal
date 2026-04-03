@@ -230,6 +230,7 @@ class _LoginPageState extends State<LoginPage> {
       //  SAVE UID
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('uid', uid);
+      await prefs.setString('name', user['name'] ?? '');
 
       print(" SAVED UID: $uid");
 
