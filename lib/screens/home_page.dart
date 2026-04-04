@@ -84,11 +84,10 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 12),
 
               _navigationCard(
-                context,
                 title: "Reminders",
-                subtitle: "Never miss anything",
-                icon: Icons.notifications_none,
-                page: const ReminderPage(),
+                subtitle: "Set your reminders",
+                icon: Icons.alarm,
+                onTap: () => widget.onNavigate(5),
               ),
             ],
           ),
