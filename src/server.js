@@ -45,7 +45,6 @@ app.use("/api/users",     userRoutes);
 // ─────────────────────────────
 // TEST ROUTE
 // ─────────────────────────────
-console.log("JWT_SECRET:", process.env.JWT_SECRET);
 app.get("/", (req, res) => {
   res.send("Vytal backend is running");
 });
