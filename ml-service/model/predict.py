@@ -87,8 +87,8 @@ def load_models():
     urgency_model  = joblib.load(os.path.join(SAVE_DIR, "urgency_model.pkl"))
     tests_model    = joblib.load(os.path.join(SAVE_DIR, "tests_model.pkl"))
     label_encoders = joblib.load(os.path.join(SAVE_DIR, "label_encoders.pkl"))
-    test_encoders  = joblib.load(os.path.join(SAVE_DIR, "test_label_encoders.pkl"))
-    return urgency_model, tests_model, label_encoders, test_encoders
+    mlb            = joblib.load(os.path.join(SAVE_DIR, "test_label_encoders.pkl"))
+    return urgency_model, tests_model, label_encoders, mlb
 
 
 def predict_for_user(primary_symptom: str, answers: dict) -> dict:
@@ -109,7 +109,7 @@ def predict_for_user(primary_symptom: str, answers: dict) -> dict:
             ]
         }
     """
-    urgency_model, tests_model, label_encoders, test_encoders = load_models()
+    urgency_model, tests_model, label_encoders, mlb = load_models()
 
     # Encode symptom
     symptom_enc = label_encoders["symptom"]
@@ -117,34 +117,33 @@ def predict_for_user(primary_symptom: str, answers: dict) -> dict:
         raise ValueError(f"Unknown symptom: {primary_symptom}. Valid: {list(symptom_enc.classes_)}")
     symptom_int = symptom_enc.transform([primary_symptom])[0]
 
-    # Build feature vector
+    # ── CHANGED: added sym_x_q2 interaction feature (must match train_model.py) ──
+    q2 = int(answers["Q2"])
     X = np.array([[
         symptom_int,
         int(answers["Q1"]),
-        int(answers["Q2"]),
+        q2,
         int(answers["Q3"]),
         int(answers["Q4"]),
         int(answers["Q5"]),
         int(answers["Q6"]),
+        symptom_int * q2,   # interaction feature: symptom × Q2 severity
     ]])
 
     # Predict urgency
     urgency_int   = urgency_model.predict(X)[0]
     urgency_label = label_encoders["urgency"].inverse_transform([urgency_int])[0]
 
-    # Predict tests
-    test_ints  = tests_model.predict(X)[0]
-    test_names = []
-    for i, (col, enc) in enumerate(test_encoders.items()):
-        name = enc.inverse_transform([test_ints[i]])[0]
-        test_names.append(name)
+    # ── CHANGED: multi-label decoding (mlb.inverse_transform instead of per-slot encoders) ──
+    pred_binary = tests_model.predict(X)          # shape (1, 40) — one binary per unique test
+    test_names  = mlb.inverse_transform(pred_binary)[0]  # tuple of predicted test name strings
 
-    # Build output — filter out "None" slots
+    # Build output with rank assigned in order returned
     recommended = []
-    for i, name in enumerate(test_names, 1):
+    for rank, name in enumerate(test_names, 1):
         if name and name != "None":
             recommended.append({
-                "rank":        i,
+                "rank":        rank,
                 "name":        name,
                 "description": TEST_DESCRIPTIONS.get(name, "")
             })
