@@ -1,3 +1,5 @@
+// lib/pages/add_symptoms_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/app_constants.dart';
@@ -7,9 +9,14 @@ import 'test_result_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AddSymptomsPage extends StatefulWidget {
-  final VoidCallback onBackToHome; //  added
+  final VoidCallback onBackToHome;
+  final VoidCallback onSymptomLogged; // ✅ FIX: added
 
-  const AddSymptomsPage({super.key, required this.onBackToHome});
+  const AddSymptomsPage({
+    super.key,
+    required this.onBackToHome,
+    required this.onSymptomLogged, // ✅ FIX: added
+  });
 
   @override
   State<AddSymptomsPage> createState() => _AddSymptomsPageState();
@@ -20,7 +27,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
   int _step = 0;
   final Map<String, int> _answers = {};
   bool _loading = false;
-
   String _uid = '';
 
   List<Map<String, dynamic>> get _questions =>
@@ -78,8 +84,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('User not logged in',
-              style: GoogleFonts.poppins()),
+          content: Text('User not logged in', style: GoogleFonts.poppins()),
           backgroundColor: AppColors.urgentRed,
         ),
       );
@@ -109,25 +114,28 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
 
       await ApiService.saveSymptomLog(log);
 
+      // ✅ FIX: notify InsightsPage to reload immediately after saving
+      widget.onSymptomLogged();
+
       if (!mounted) return;
+
       Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TestResultPage(
-          log: log,
+        context,
+        MaterialPageRoute(
+          builder: (_) => TestResultPage(
+            log: log,
             onBackToHome: () {
               Navigator.pop(context);
-            // Reset state before going home
               setState(() {
                 _step = 0;
                 _selectedSymptom = null;
                 _answers.clear();
-  });
-  widget.onBackToHome();
-},
-    ),
-  ),
-);
+              });
+              widget.onBackToHome();
+            },
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -138,7 +146,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
         ),
       );
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -151,9 +159,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-          onPressed: _step == 0
-              ? widget.onBackToHome // FIXED
-              : _back,
+          onPressed: _step == 0 ? widget.onBackToHome : _back,
         ),
         title: Text(
           _step == 0 ? 'Select Symptom' : _selectedSymptom ?? '',
@@ -172,7 +178,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
     );
   }
 
-  // ── SYMPTOM PICKER ──────────────────────────────────────────────────────────
   Widget _symptomPicker() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -241,7 +246,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
     );
   }
 
-  // ── QUESTION FLOW ──────────────────────────────────────────────────────────
   Widget _questionFlow() {
     final q = _currentQuestion!;
     final isScale = q['type'] == 'scale';
@@ -275,7 +279,6 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
             ),
           ),
           const SizedBox(height: 40),
-
           Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
@@ -290,9 +293,7 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
                     fontWeight: FontWeight.w500,
                     height: 1.5)),
           ),
-
           const SizedBox(height: 32),
-
           if (isScale) ...[
             Row(
               children: [
@@ -306,16 +307,15 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
           ] else ...[
             Row(
               children: [
-                Expanded(child: _ynOption(0, 'No', Icons.close, currentAnswer)),
+                Expanded(
+                    child: _ynOption(0, 'No', Icons.close, currentAnswer)),
                 const SizedBox(width: 16),
                 Expanded(
                     child: _ynOption(1, 'Yes', Icons.check, currentAnswer)),
               ],
             ),
           ],
-
           const Spacer(),
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -402,19 +402,19 @@ class _AddSymptomsPageState extends State<AddSymptomsPage> {
 
   IconData _symptomIcon(String symptom) {
     switch (symptom) {
-      case 'Chest Pain': return Icons.favorite_border;
+      case 'Chest Pain':          return Icons.favorite_border;
       case 'Shortness of Breath': return Icons.air;
-      case 'Dizziness': return Icons.rotate_right;
-      case 'High BP': return Icons.monitor_heart;
-      case 'Sweating': return Icons.water_drop;
-      case 'Nausea': return Icons.sick;
-      case 'Fatigue': return Icons.battery_1_bar;
-      case 'Arm Pain': return Icons.accessibility_new;
-      case 'Jaw Pain': return Icons.face;
+      case 'Dizziness':           return Icons.rotate_right;
+      case 'High BP':             return Icons.monitor_heart;
+      case 'Sweating':            return Icons.water_drop;
+      case 'Nausea':              return Icons.sick;
+      case 'Fatigue':             return Icons.battery_1_bar;
+      case 'Arm Pain':            return Icons.accessibility_new;
+      case 'Jaw Pain':            return Icons.face;
       case 'Irregular Heartbeat': return Icons.timeline;
-      case 'Swelling Legs': return Icons.directions_walk;
-      case 'Fainting': return Icons.warning_amber;
-      default: return Icons.medical_services;
+      case 'Swelling Legs':       return Icons.directions_walk;
+      case 'Fainting':            return Icons.warning_amber;
+      default:                    return Icons.medical_services;
     }
   }
 }
