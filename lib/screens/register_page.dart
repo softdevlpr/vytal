@@ -235,7 +235,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   try {
     final response = await http.post(
-      Uri.parse("https://vytal-backend-dxx8.onrender.com/api/auth/register"),
+      Uri.parse("http://10.0.2.2:3000/api/auth/register"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "name": nameController.text.trim(),
