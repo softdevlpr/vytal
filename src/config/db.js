@@ -7,16 +7,16 @@ const connectDB = async () => {
   try {
     // ── Mongoose connection (existing — keeps your models/auth working) ──────
     const conn = await mongoose.connect(process.env.MONGO_URI);
-    console.log("✅ Mongoose connected");
+    console.log("Mongoose connected");
     console.log("DB NAME:", conn.connection.db.databaseName);
 
     // ── Native MongoDB driver (new controllers need getDB()) ─────────────────
     // Reuse the same underlying connection that Mongoose already opened
     nativeDB = conn.connection.db;
-    console.log("✅ Native MongoDB client ready");
+    console.log("Native MongoDB client ready");
 
   } catch (error) {
-    console.error("❌ DB Connection Error:", error);
+    console.error("DB Connection Error:", error);
     process.exit(1);
   }
 };
