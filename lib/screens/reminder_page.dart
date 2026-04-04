@@ -28,7 +28,7 @@ class _ReminderPageState extends State<ReminderPage> {
 
   final List<String> weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  final String baseUrl = "http://10.0.2.2:3000";
+  final String baseUrl = "https://vytal-backend-dxx8.onrender.com";
 
   List<Map<String, dynamic>> _reminders = [];
 
