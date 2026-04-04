@@ -5,7 +5,7 @@ import '../models/models.dart';
 
 class ApiService {
   static const String mlBaseUrl = 'http://10.0.2.2:8000';
-  static const String dbBaseUrl = 'https://vytal-backend-dxx8.onrender.com/api';
+  static const String dbBaseUrl = 'http://10.0.2.2:3000/api';
 
   static const _headers = {'Content-Type': 'application/json'};
 
