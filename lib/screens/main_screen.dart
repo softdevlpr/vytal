@@ -4,6 +4,7 @@ import 'plan_page.dart';
 import 'insights_page.dart';
 import 'profile_settings_page.dart';
 import 'add_symptoms_page.dart';
+import 'reminder_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -31,23 +32,24 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   List<Widget> get pages => [
-        HomePage(onNavigate: (index) {
-          if (!mounted) return;
-          setState(() {
-            currentIndex = index;
-          });
-        }),
-        PlanPage(onBackToHome: goToHome),
-        AddSymptomsPage(
-          onBackToHome: goToHome,
-          onSymptomLogged: _refreshInsights, // ✅ FIX: pass refresh callback
-        ),
-        InsightsPage(
-          onBackToHome: goToHome,
-          refreshTrigger: _insightsRefreshTrigger, // ✅ FIX: pass trigger
-        ),
-        ProfileSettingsPage(onBackToHome: goToHome),
-      ];
+  HomePage(onNavigate: (index) {
+    if (!mounted) return;
+    setState(() {
+      currentIndex = index;
+    });
+  }),
+  PlanPage(onBackToHome: goToHome),
+  AddSymptomsPage(
+    onBackToHome: goToHome,
+    onSymptomLogged: _refreshInsights,
+  ),
+  InsightsPage(
+    onBackToHome: goToHome,
+    refreshTrigger: _insightsRefreshTrigger,
+  ),
+  ProfileSettingsPage(onBackToHome: goToHome),
+  ReminderPage(), // ✅ index 5
+];
 
   @override
   void dispose() {
