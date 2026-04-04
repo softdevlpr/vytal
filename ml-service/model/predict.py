@@ -163,6 +163,13 @@ def predict_for_user(primary_symptom: str, answers: dict) -> dict:
         })
 
 
+return {
+    "urgency": urgency_label,
+    "urgency_description": URGENCY_DEFINITIONS[urgency_label],
+    "recommended_tests": recommended,
+}
+
+
 if __name__ == "__main__":
     print("🔍 Test prediction for: Chest Pain (severe, radiating, at rest)\n")
     result = predict_for_user("Chest Pain", {
