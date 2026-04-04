@@ -8,9 +8,14 @@ import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class InsightsPage extends StatefulWidget {
-  final VoidCallback onBackToHome; //  added
+  final VoidCallback onBackToHome;
+  final ValueNotifier<int> refreshTrigger; // ✅ FIX: added
 
-  const InsightsPage({super.key, required this.onBackToHome}); //  updated
+  const InsightsPage({
+    super.key,
+    required this.onBackToHome,
+    required this.refreshTrigger, // ✅ FIX: added
+  });
 
   @override
   State<InsightsPage> createState() => _InsightsPageState();
@@ -20,20 +25,31 @@ class _InsightsPageState extends State<InsightsPage> {
   String _period = 'week';
   Map<String, dynamic> _data = {};
   bool _loading = true;
-
   String _uid = '';
 
   Future<void> _loadUid() async {
     final prefs = await SharedPreferences.getInstance();
     _uid = prefs.getString('uid') ?? '';
-
-    print(" LOADED UID: $_uid");
   }
 
   @override
   void initState() {
     super.initState();
+    // ✅ FIX: listen to refreshTrigger — reload whenever a symptom is logged
+    widget.refreshTrigger.addListener(_onRefreshTriggered);
     _init();
+  }
+
+  @override
+  void dispose() {
+    // ✅ FIX: always remove listener to avoid memory leaks
+    widget.refreshTrigger.removeListener(_onRefreshTriggered);
+    super.dispose();
+  }
+
+  // ✅ FIX: called automatically when MainScreen increments the trigger
+  void _onRefreshTriggered() {
+    _load();
   }
 
   Future<void> _init() async {
@@ -42,12 +58,11 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   Future<void> _load() async {
-    print(" LOADING INSIGHTS...");
-    print("UID: $_uid | PERIOD: $_period");
+    if (_uid.isEmpty) {
+      await _loadUid(); // try once more in case uid wasn't ready
+    }
 
     if (_uid.isEmpty) {
-      print(" UID EMPTY");
-
       setState(() {
         _data = {};
         _loading = false;
@@ -58,17 +73,14 @@ class _InsightsPageState extends State<InsightsPage> {
     setState(() => _loading = true);
 
     try {
-      final data =
-          await ApiService.getInsights(uid: _uid, period: _period);
-
-      print(" API RESPONSE: $data");
-
+      final data = await ApiService.getInsights(uid: _uid, period: _period);
+      if (!mounted) return;
       setState(() {
         _data = data;
         _loading = false;
       });
     } catch (e) {
-      print(" LOAD ERROR: $e");
+      if (!mounted) return;
       setState(() => _loading = false);
     }
   }
@@ -82,7 +94,7 @@ class _InsightsPageState extends State<InsightsPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-          onPressed: widget.onBackToHome, // fixed
+          onPressed: widget.onBackToHome,
         ),
         title: Text('Insights',
             style: GoogleFonts.poppins(
@@ -96,7 +108,8 @@ class _InsightsPageState extends State<InsightsPage> {
           Expanded(
             child: _loading
                 ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary))
+                    child:
+                        CircularProgressIndicator(color: AppColors.primary))
                 : _data.isEmpty
                     ? _emptyState()
                     : _insightsContent(),
@@ -168,9 +181,7 @@ class _InsightsPageState extends State<InsightsPage> {
                   Icons.favorite_border, AppColors.soonAmber),
             ],
           ),
-
           const SizedBox(height: 12),
-
           Row(
             children: [
               _summaryCard('Urgent',
@@ -186,9 +197,7 @@ class _InsightsPageState extends State<InsightsPage> {
                   AppColors.routineGreen),
             ],
           ),
-
           const SizedBox(height: 24),
-
           if (chartPoints.isNotEmpty) ...[
             Text('Severity Trend',
                 style: GoogleFonts.poppins(
@@ -196,7 +205,6 @@ class _InsightsPageState extends State<InsightsPage> {
                     fontSize: 16,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
-
             Container(
               height: 200,
               padding: const EdgeInsets.all(16),
@@ -212,8 +220,7 @@ class _InsightsPageState extends State<InsightsPage> {
                       spots: chartPoints
                           .asMap()
                           .entries
-                          .map((e) => FlSpot(
-                              e.key.toDouble(),
+                          .map((e) => FlSpot(e.key.toDouble(),
                               (e.value['score'] ?? 0).toDouble()))
                           .toList(),
                       isCurved: true,
@@ -225,7 +232,6 @@ class _InsightsPageState extends State<InsightsPage> {
               ),
             ),
           ],
-
           const SizedBox(height: 32),
         ],
       ),
