@@ -134,25 +134,33 @@ def predict_for_user(primary_symptom: str, answers: dict) -> dict:
     urgency_int   = urgency_model.predict(X)[0]
     urgency_label = label_encoders["urgency"].inverse_transform([urgency_int])[0]
 
-    # ── CHANGED: multi-label decoding (mlb.inverse_transform instead of per-slot encoders) ──
-    pred_binary = tests_model.predict(X)          # shape (1, 40) — one binary per unique test
-    test_names  = mlb.inverse_transform(pred_binary)[0]  # tuple of predicted test name strings
+   #  Get probability scores
+    probs = tests_model.predict_proba(X)   # shape: (1, n_tests)
 
-    # Build output with rank assigned in order returned
+    test_scores = []
+
+    # Loop over each test (column-wise)
+    for i in range(probs.shape[1]):
+        score = probs[0][i]   # probability for that test
+        test_name = mlb.classes_[i]
+
+        if test_name != "None":
+            test_scores.append((test_name, score))
+
+    #  Sort by score
+    sorted_tests = sorted(test_scores, key=lambda x: x[1], reverse=True)
+
+    #  Take top 6
+    top_tests = sorted_tests[:6]
+
+    #  Build output
     recommended = []
-    for rank, name in enumerate(test_names, 1):
-        if name and name != "None":
-            recommended.append({
-                "rank":        rank,
-                "name":        name,
-                "description": TEST_DESCRIPTIONS.get(name, "")
-            })
-
-    return {
-        "urgency":              urgency_label,
-        "urgency_description":  URGENCY_DEFINITIONS[urgency_label],
-        "recommended_tests":    recommended,
-    }
+    for rank, (name, _) in enumerate(top_tests, 1):
+        recommended.append({
+            "rank": rank,
+            "name": name,
+            "description": TEST_DESCRIPTIONS.get(name, "")
+        })
 
 
 if __name__ == "__main__":
