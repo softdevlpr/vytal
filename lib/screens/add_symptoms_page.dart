@@ -10,12 +10,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AddSymptomsPage extends StatefulWidget {
   final VoidCallback onBackToHome;
-  final VoidCallback onSymptomLogged; // ✅ FIX: added
+  final VoidCallback onSymptomLogged; //  FIX: added
 
   const AddSymptomsPage({
     super.key,
     required this.onBackToHome,
-    required this.onSymptomLogged, // ✅ FIX: added
+    required this.onSymptomLogged, //  FIX: added
   });
 
   @override
